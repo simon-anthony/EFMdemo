@@ -1,0 +1,31 @@
+# vim: syntax=systemd:
+
+[Service]
+Restart=on-abort
+# If you have a version of systemd that supports it, the first two lines
+# (ps and pgrep) can be changed to ExecCondition
+
+ExecStartPre=/bin/sh -c " \
+	if [ -f /var/run/efm-3.10/${CLUSTER}.pid ] ; \
+	then \
+		if /bin/ps -fp `cat /var/run/efm-3.10/${CLUSTER}.pid` ; \
+		then \
+			exit 3 ; \
+		fi ; \
+	fi ; \
+	exit 0"
+ExecStartPre=/bin/sh -c " \
+	if /bin/pgrep -fl EFM-3\.10\.jar.*/${CLUSTER}\.properties ; \
+	then \
+		exit 4 ; \
+	else \
+		exit 0 ; \
+	fi"
+ExecStartPre=/bin/sh -c " \
+	lock_dir=`/bin/sed -n ' \
+		/^lock\.dir/ { \
+			s;.*=;; ; \
+			s;^$;/var/lock/efm-3.10; ; \
+			p ; \
+		}' /etc/edb/efm-3.10/${CLUSTER}.properties` ; \
+	/bin/rm -f $lock_dir/${CLUSTER}.lock"

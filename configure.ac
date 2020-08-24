@@ -1,0 +1,18 @@
+AC_INIT([efmtools],[1.1],[bug@enterprisedb.com])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AC_PROG_AWK([gawk] nawk awk)
+AC_PROG_YACC
+AC_PROG_LEX
+AC_PROG_RANLIB([ranlib])
+AM_PROG_AR
+LT_INIT([aix-soname=both])
+AM_CONDITIONAL([LINUX], [test `uname -s` = Linux] )
+AM_CONDITIONAL([SUN], [test `uname -s` = SunOS] )
+AM_CONDITIONAL([HPUX], [test `uname -s` = HP-UX] )
+AM_CONDITIONAL([AIX], [test `uname -s` = AIX] )
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_FILES([
+Makefile
+bin/Makefile
+])
+AC_OUTPUT

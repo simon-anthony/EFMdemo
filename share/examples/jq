@@ -1,0 +1,57 @@
+#!/bin/sh -
+efm cluster-status-json efm | jq '.nodes | to_entries | map_values(.value +  { node: .key })'
+
+efm cluster-status-json efm | jq -r '.nodes | to_entries | map_values(.value + { node: .key }) | .[]  | { node: .node, type: .type }'
+
+efm cluster-status-json efm | jq -r '.nodes | to_entries | map_values(.value + { node: .key }) | .[]  | { node: .node, type: .type } | flatten | @sh'
+
+efm cluster-status-json efm | jq -r '.nodes | to_entries | map_values(.value + { node: .key }) | .[]  | select(.type | test("Master")) | { node: .node, type: .type } | flatten | @sh'
+
+efm cluster-status-json efm | 
+	jq -r '.nodes |
+		to_entries |
+			map_values(.value + { node: .key }) | .[]  |
+				select(.type | test("Master")) |
+					{ xnode: .node, type: .type } |
+						flatten | @sh'
+type=standby
+efm cluster-status-json efm | 
+	jq -r '.nodes |
+		to_entries |
+			map_values(.value + { node: .key }) | .[]  |
+				select(.type | test("'$type'"; "ig")) |
+					{ node: .node, type: .type } |
+						flatten | @sh'
+type=standby
+efm cluster-status-json efm | 
+	jq -r '.nodes |
+		to_entries |
+			map_values(.value + { node: .key }) | .[]  |
+				select(.type | test("'$type'"; "ig")) |
+					{ node: "a=" + .node, type: .type } |
+						flatten | @sh'
+
+efm cluster-status-json efm |     jq -r '.nodes |
+        to_entries |
+            map_values(.value + { node: .key }) | .[]  |
+                select(.type | test("'$type'"; "ig")) |
+                    { node: .node, type: .type } | with_entries(.value |= "=" + .)'
+
+efm cluster-status-json efm |     jq -r '.nodes |
+        to_entries |
+            map_values(.value + { node: .key }) | .[]  |
+                select(.type | test("'$type'"; "ig")) |
+                    { item: "node=\(.node) type=\(.type)" }'
+
+efm cluster-status-json efm | jq -r '.nodes |
+	to_entries |
+	map_values(.value + { node: .key }) | .[]  |
+	select(.type | test("'$type'"; "ig")) |
+	{ item: "node=\(.node) type=\(.type) agent=\(.agent) db=\(.db)" } |
+	flatten | @sh'
+
+efm cluster-status-json efm | jq -r '.nodes |
+	to_entries |
+	map_values(.value + { node: .key }) | .[]  |
+	select(.type | test("'$type'"; "ig")) |
+	{ item: "node=\(.node) type=\(.type) agent=\(.agent) db=\(.db)" } | .[] '

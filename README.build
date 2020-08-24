@@ -1,0 +1,30 @@
+# vim: syntax=sh:sw=4:ts=4:
+topdir=`eval echo \`sed -n '
+    /^%_topdir/ {
+        s;%_topdir[     ]*;;
+        s;%{getenv:HOME};$HOME; 
+        p
+    }' ~/.rpmmacros\``
+
+[ "X$topdir" != "X" ] || { echo "ERROR: _topdir not set in .rpmmacros" >&2; exit 1; }
+
+echo topdir is $topdir
+
+for dir in BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
+do
+	mkdir -p $topdir/$dir
+done
+
+autoreconf --install
+./configure
+
+pkg=`sed -n 's;.*AC_INIT(\[\([^,]*\)\].*;\1;p' configure.ac`
+vers=`sed -n 's;.*AC_INIT(\[\([^,]*\)\],[   ]*\[\([^,]*\)\].*;\2;p' configure.ac`
+
+make dist-gzip || exit $?  # make dist-gzip PACKAGE=$pkg || exit $?
+
+mv $pkg-$vers.tar.gz $topdir/SOURCES
+
+cp -f $pkg.spec $topdir/SPECS
+
+rpmbuild -bb $topdir/SPECS/$pkg.spec
