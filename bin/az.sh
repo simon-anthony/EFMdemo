@@ -22,8 +22,7 @@
 # to aws. You can configure credentials by running "aws configure" as this
 # user.
 
-#PATH=/usr/bin:BINDIR export PATH
-PATH=/usr/bin:/usr/local/bin export PATH
+PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
 typeset nflg= zflg= errflg=

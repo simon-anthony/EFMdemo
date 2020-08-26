@@ -1,4 +1,4 @@
-AC_INIT([efmtools],[1.1],[bug@enterprisedb.com])
+AC_INIT([efmdemo],[1.1],[bug@enterprisedb.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_AWK([gawk] nawk awk)
 AC_PROG_YACC

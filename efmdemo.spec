@@ -1,6 +1,8 @@
-Name:		efm-demo
+%define _prefix /usr/local
+
+Name:		efmdemo
 Version:	1.1
-Release:	1%{?dist}
+Release:	3%{?dist}
 Summary:	EDB Failover Manager Demo on AWS
 
 Group:		Productivity/Database/Tools
@@ -9,10 +11,10 @@ URL:		www.enterprisedb.com
 Vendor:		EDB
 Packager:	Simon Anthony
 Source0:	%{name}-%{version}.tar.gz
-BuildRoot:  %_topdir/BUILDROOT/%{name}-%{version}-%{release}-build
 
-BuildRequires: jq, lib-notify
-Requires:	
+BuildRequires: jq, libnotify
+
+%global debug_package %{nil}
 
 %description
 Supporting scripts and tools for EFM Demo on AWS
@@ -31,23 +33,22 @@ Supporting scripts and tools for EFM Demo on AWS
 	--sysconfdir=%_sysconfdir \
 	--libdir=%_libdir \
 	--includedir=%_includedir \
-	--localstatedir=/var/%{_prefix} \
+	--localstatedir=%{_localstatedir} \
 	--mandir=%{_prefix}/share/man 
 make %{?_smp_mflags}
 
 
 %install
-[ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}
-make DESTDIR=${RPM_BUILD_ROOT} install
+[ %buildroot != "/" ] && rm -rf %buildroot
+make DESTDIR=%buildroot install
 
 
 %clean
-[ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}
+[ %buildroot != "/" ] && rm -rf %buildroot
 
 
 %files
 %{_bindir}/*
-
 
 %changelog
 

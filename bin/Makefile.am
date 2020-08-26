@@ -17,9 +17,9 @@ SUFFIXES = .sh
 bin_SCRIPTS = \
 	efm-notify \
 	efm-post-promotion \
-	efm-remote-post-promotion
+	efm-remote-post-promotion \
 	az \
-	clusternodes \
+	getnodes \
 	getbasebackup \
 	repstatus \
 	getprop
@@ -31,7 +31,7 @@ EXTRA_DIST = \
 	efm-post-promotion.sh \
 	efm-remote-post-promotion.sh \
 	az.sh \
-	clusternodes.sh \
+	getnodes.sh \
 	getbasebackup.sh \
 	repstatus.sh \
 	getprop.sh

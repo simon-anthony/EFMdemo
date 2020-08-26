@@ -18,10 +18,9 @@
 #
 
 # Get efm nodes for CLUSTER. The user invoking this script must be a member of
-# the "efm" group.
+# the "efm" group. SUPERSEDED by getnodes
 
-#PATH=/usr/bin:BINDIR export PATH
-PATH=/usr/bin:/usr/local/bin export PATH
+PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
 typeset mflg= sflag= wflg= cflg= fflg= errflg= 

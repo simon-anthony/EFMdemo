@@ -21,8 +21,7 @@
 #  https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html
 #   File gateway does not support creating hard or symbolic links on a file share.
 
-#PATH=/usr/bin:BINDIR export PATH
-PATH=/usr/bin:/usr/local/bin export PATH
+PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
 typeset fflg= Xflag= errflg= method=stream

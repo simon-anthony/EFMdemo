@@ -22,8 +22,7 @@
 # user.
 # First argument is failed master (%f), second argument is new primary (%p)
 
-#PATH=/usr/bin:BINDIR export PATH
-PATH=/usr/bin:/usr/local/bin export PATH
+PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
 typeset nflg= errflg=

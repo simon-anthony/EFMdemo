@@ -32,8 +32,7 @@
 #     sudo semanage fcontext -a -t ssh_home_t /var/efm/.ssh
 #     sudo restorecon -R -v /var/efm/.ssh/
 
-#PATH=/usr/bin:BINDIR export PATH
-PATH=/usr/bin:/usr/local/bin export PATH
+PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
 properties=`ls /etc/edb/efm-*/${CLUSTER:=efm}.properties | sort -t\- -V -k2 -r | head -1`
