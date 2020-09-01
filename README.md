@@ -106,9 +106,11 @@ done
 </code></pre>
 
 Bootstrap the **autoconf** tools:
+
 `autoreconf --install`
 
 Then run configure:
+
 `./configure`
 
 This will create the necsessary <code>Makefile</code> that is required to build the source tarball.
