@@ -83,45 +83,39 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Acknowledgments
 
 ## Building RPMS from the Source Tree
+
+## Building RPMS from the Source Tree
 Set `%_topdir` in the file `$HOME/.rpmmacros`
 
-<pre><code>
-topdir=`eval echo \`sed -n '
+<pre><code>topdir=`eval echo \`sed -n '
     /^%_topdir/ {
         s;%_topdir[     ]*;;
         s;%{getenv:HOME};$HOME;
         p
     }' ~/.rpmmacros\``
 
-[ "X$topdir" != "X" ] || { echo "ERROR: _topdir not set in .rpmmacros" >&2; exit 1; }
-
 echo topdir is $topdir
 </code></pre>
 
 Create the build directories:
-<pre><code>
-for dir in BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
+
+<pre><code>for dir in BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
 do
     mkdir -p $topdir/$dir
 done
 </code></pre>
 
 Bootstrap the autoconf tools:
-<pre><code>
-autoreconf --install
-</code></pre>
+
+`autoreconf --install`
 
 Then run configure:
-<pre><code>
-./configure
-</code></pre>
+`./configure`
 
 This will create the necsessary <code>Makefile</code>s that are required to build the source tarball.
 Then we can create the tarball:
 
-<pre><code>
-make dist-gzip
-</code></pre>
+`make dist-gzip`
 
 We can then move the package into the `SOURCES` directory:
 
@@ -129,13 +123,9 @@ We can then move the package into the `SOURCES` directory:
 
 And we also need a copy the spec file to the `SPECS` directory:
 
-<pre><code>
-cp -f efmdemo.spec $topdir/SPECS
-</code></pre>
+`cp -f efmdemo.spec $topdir/SPECS`
 
 Finally, build the package:
 
-<pre><code>
-rpmbuild -bb $topdir/SPECS/efmbuild.spec
-</code></pre>
+`rpmbuild -bb $topdir/SPECS/efmbuild.spec`
 
