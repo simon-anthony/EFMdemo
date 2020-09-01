@@ -4,7 +4,6 @@ AC_CONFIG_MACRO_DIRS([m4])
 AC_PROG_AWK([gawk] nawk awk)
 AC_PROG_YACC
 AC_PROG_LEX
-#AC_PROG_RANLIB([ranlib])
 AM_PROG_AR
 LT_INIT([aix-soname=both])
 AM_CONDITIONAL([LINUX], [test `uname -s` = Linux] )
