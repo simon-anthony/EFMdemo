@@ -1,0 +1,47 @@
+.\" vim:ts=4:sw=4:syntax=nroff
+.fp 1 R
+.fp 2 I
+.fp 3 B
+.fp 4 BI
+.fp 5 R
+.fp 6 I
+.fp 7 B
+.nr X
+.TH getbasebackup 1 "05 Jun 2020" "EFM Demo Tools"
+.SH NAME
+getbasebackup \- create standby database on local host
+.SH SYNOPSIS
+\f3getbasebackup\f1
+[\f3-i\f1] [\f3-f\f1]] [\f3-X \f2method\f1] \f2rhost\f1]
+.SH DESCRIPTION
+.IX "getbasebackup"
+.P
+\f3getbasebackup\f1 uses \f3pg_basebackup\f1 to copy a remote backup from a
+primary database residing on \f2rhost\f1 to create a standby on the local host.
+.P
+Provision is made to use information gleaned from a running EFM cluster. 
+.SH OPTIONS
+.TP
+\f3\-i\f1
+Ignore the EFM configuration used for sanity checks. In this instance it is
+assumed that \f2rhost\f1 is indeed a primary database.
+.TP
+\f3\-f\f1
+Force the removal of \f4$PGDATA\f1 (defined by the EFM property \f3db.data.dir\f1) if it exists prior to running \f3pg_basebackup\f1.
+.SH NOTES
+The EFM process on the current node cannot be started until the database directory \f4$PGDATA\f1
+defined by the EFM property \f3db.data.dir\f1 exists and contains the file \f4$PGDATA/PG_VERSION\f1.
+In this instance this scenario can be circumvented by having
+\f3getbasebackup\f1 ignore the EFM configuration for the initial build by
+using the \f3-i\f1 option.
+.SH EXAMPLES
+Create a standby database on the current host from node s1:
+.nf
+.sp
+\f5$ \f7getbasebackup s1\f5
+.fi
+.SH AUTHOR
+Simon Anthony (simon.anthony@hotmail.com)
+.SH SEE ALSO
+.BR getprop (1),
+.BR pg_basebackup (1)

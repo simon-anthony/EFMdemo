@@ -27,6 +27,9 @@ PATH=/usr/bin:BINDIR export PATH
 prog=`basename $0 .sh`
 typeset nflg= errflg=
 
+: ${CLUSTER:=efm}
+export CLUSTER
+
 while getopts "n" opt 2>&-
 do
 	case $opt in
@@ -37,8 +40,6 @@ done
 shift $(( OPTIND - 1 ))
 
 [ $errflg ] && { echo "usage: $prog [-n] [<master-address> [<primary-address>]]" >&2; exit 2; }
-
-: ${CLUSTER:=efm}
 
 properties=`ls /etc/edb/efm-*/${CLUSTER}.properties | sort -t\- -V -k2 -r | head -1`
 

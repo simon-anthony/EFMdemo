@@ -1,9 +1,10 @@
-AC_INIT([efmdemo],[1.1],[bug@enterprisedb.com])
+AC_INIT([efmdemo],[1.2],[bug@enterprisedb.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AC_CONFIG_MACRO_DIRS([m4])
 AC_PROG_AWK([gawk] nawk awk)
 AC_PROG_YACC
 AC_PROG_LEX
-AC_PROG_RANLIB([ranlib])
+#AC_PROG_RANLIB([ranlib])
 AM_PROG_AR
 LT_INIT([aix-soname=both])
 AM_CONDITIONAL([LINUX], [test `uname -s` = Linux] )
@@ -14,5 +15,8 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 Makefile
 bin/Makefile
+share/Makefile
+share/man/Makefile
+share/man/man1/Makefile
 ])
 AC_OUTPUT

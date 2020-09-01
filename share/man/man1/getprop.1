@@ -1,0 +1,55 @@
+.\" vim:ts=4:sw=4:syntax=nroff
+.fp 1 R
+.fp 2 I
+.fp 3 B
+.fp 4 BI
+.fp 5 CO
+.fp 6 CI
+.fp 7 CB
+.nr X
+.TH getprop 1 "09 Nov 2009" "EFM Demo Tools"
+.SH NAME
+getprop \- locate context file for e-Business node
+.SH SYNOPSIS
+\f3getprop\f1 [\f3-v\f1] [\f2property\f1]
+.nf
+\f3getprop\f1 [\f3-i\f1] \f2property\f1
+.SH DESCRIPTION
+.IX "getprop"
+.P
+\f3getprop\f1 retrieves EFM properties from the current EFM properties file.
+The cluster file in use is defined by the environment variable \f4$CLUSTER\f1
+or the default "efm" if this is not present.
+.SH OPTIONS
+.TP
+\f3\-v\f1
+Print the property in a form that can be used to assign tp a shell variable.
+The property name has any periods "." in its name replaced by underscores "_".
+The value returned by \f3getprop\f1 can be given to \f3eval\f1.
+.TP
+\f3\-i\f1
+Print information about the property \f3property\f1.
+.SH EXAMPLES
+.SS Find the value of PGDATA for this database
+.P
+An example of invocation might be:
+.P
+.nf
+.sp
+\f5$ \f7getprop db.data.dir\f5
+/pg/data
+.fi
+.SS Set the value for the service name
+.P
+With the \f3-v\f1 option, we might perform:
+.nf
+.sp
+\f5$ \f7eval `getprop -v db.service.name`\f5
+\f5$ \f7echo $db_service_name\f5
+edb-as-12
+\f5$ \f7systemctl is-active $db_service_name\f5
+.fi
+.SH AUTHOR
+Simon Anthony (simon.anthony@me.com)
+
+

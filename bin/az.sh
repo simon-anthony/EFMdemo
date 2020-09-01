@@ -27,6 +27,9 @@ PATH=/usr/bin:BINDIR export PATH
 prog=`basename $0 .sh`
 typeset nflg= zflg= errflg=
 
+: ${CLUSTER:=efm}
+export CLUSTER
+
 while getopts "nz:" opt 2>&-
 do
 	case $opt in
@@ -44,8 +47,6 @@ shift $(( OPTIND - 1 ))
 [ $errflg ] && { 
 	echo "usage: $prog [<node>]" >&2; 
 	echo "       $prog -z <zone>" >&2; exit 2; }
-
-: ${CLUSTER:=efm}
 
 if [ $# -eq 1 ]
 then

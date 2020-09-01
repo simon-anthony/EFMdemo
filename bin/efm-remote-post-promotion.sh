@@ -28,6 +28,9 @@ PATH=/usr/bin:BINDIR export PATH
 prog=`basename $0 .sh`
 typeset nflg= errflg=
 
+: ${CLUSTER:=efm}
+export CLUSTER
+
 while getopts "n" opt 2>&-
 do
 	case $opt in
@@ -43,7 +46,7 @@ shift $(( OPTIND - 1 ))
 
 master=$1
 
-properties=`ls /etc/edb/efm-*/${CLUSTER:=efm}.properties | sort -t\- -V -k2 -r | head -1`
+properties=`ls /etc/edb/efm-*/$CLUSTER.properties | sort -t\- -V -k2 -r | head -1`
 
 if [ -r "$properties" ] 
 then
@@ -61,12 +64,12 @@ master=`dig -x $master +short`	# hostname
 master=${master%%.*}
 
 logger -t $prog -p ${facility}.info "Setting new master in autofs: $master"
-if sudo ex -s /etc/sysconfig/autofs <<-!
+if sudo -n ex -s /etc/sysconfig/autofs <<-!
     g/-DRHOST/s;\(-DRHOST\)=[^"'  ]\{1,\};\1=$master;
 	w!
 !
 then
-	sudo systemctl reload autofs
+	sudo -n systemctl reload autofs
 	logger -t $prog -p ${facility}.info "Reloaded autofs"
 else
 	logger -t $prog -p ${facility}.error "Failed to edit /etc/sysconfig/autofs"

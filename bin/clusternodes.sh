@@ -25,7 +25,9 @@ PATH=/usr/bin:BINDIR export PATH
 prog=`basename $0 .sh`
 typeset mflg= sflag= wflg= cflg= fflg= errflg= 
 node=".*"
+
 : ${CLUSTER:=efm}
+export CLUSTER
 
 while getopts "mswcfa" opt 2>&-
 do

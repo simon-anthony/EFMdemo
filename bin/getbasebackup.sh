@@ -24,12 +24,16 @@
 PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
-typeset fflg= Xflag= errflg= method=stream
+typeset fflg= iflg= Xflag= errflg= method=stream
 
-while getopts "fX:" opt 2>&-
+: ${CLUSTER:=efm}
+export CLUSTER
+
+while getopts "fiX:" opt 2>&-
 do
 	case $opt in
-	f)	fflg=y ;;
+	f)	fflg=y ;;	# force removal of existing PGDATA
+	i)	iflg=y ;;	# ignore EFM status
 	X)	Xflg=y
 		case "$method" in
 		fetch|stream|none)	
@@ -43,7 +47,17 @@ shift $(( OPTIND - 1 ))
 
 [ $# -eq 1 ] || errflg=y
 
-[ $errflg ] && { echo "usage: $prog [-f] <rhost>" >&2; exit 2; }
+[ $errflg ] && { echo "usage: $prog [-fi] [-X <method>] <rhost>" >&2; exit 2; }
+
+properties=`ls /etc/edb/efm-*/$CLUSTER.properties | sort -t\- -V -k2 -r | head -1`
+
+if [ "X$properties" = "X" ]
+then
+	echo "$prog: cannot find properties file for EFM" >&2
+	exit 1
+fi
+version=${properties##*-} version=${version%%/*}
+maj=${version%.*} min=${version#*.}
 
 bindir=`ls -d /usr/edb/efm-*/bin | sort -t\- -V -k2 -r | head -1`
 PATH=$PATH:$bindir
@@ -75,57 +89,106 @@ then
 	echo "$prog: host and remote host cannot be the same node"; exit 1
 fi
 
-# Find the Master node
-eval `efm cluster-status-json efm | jq -r '.nodes |
-        to_entries |
-        map_values(.value + { node: .key }) | .[]  |
-        select(.type | test("Master"; "ig")) |
-        { item: "masterip=\(.node)" } | .[]'`
+eval `getprop -v is.witness`
 
-if [ "X$masterip" = "X" ]
+if [ "X$is_witness" = "Xtrue" ]
 then
-	echo "$prog: cannot determine master node in cluster" >&2
+	echo "$prog: current node is witness" >&2
 	exit 1
 fi
 
-if ! ent=`getent hosts $masterip`
+if [ ! "$iflg" ]
 then
-	echo "$prog: cannot find local host entry for '$masterip'" >&2
-	exit 1
-fi
-set -- $ent
-eval master=\$$#
-
-if [ "X$rhostip" != "X$masterip" ]
-then
-	echo "$prog: remote host $rhost [$rhostip] is not the master node $master [$masterip]"; exit 1
-fi
-
-db="edb-as-12"
-
-if status=`systemctl is-active $db`
-then
-	if [ "X$status" = "Xactive" ]
+	if ! status=`systemctl is-active edb-efm-\*`
 	then
-		echo "$prog: service $db is running"; exit 1
+		 echo "$prog: EFM systemd service is not started${iflg:+, ignored}" >&2
+		 [ $iflg ] || exit 1
+		 efm=n
+	fi
+
+	# Check if agent is contactable
+	if [ \( $maj -eq 3 -a $min -ge 10 \) -o $maj -gt 3 ] # 3.10+ offers this
+	then
+		# cluster-status(-json) will return non-zero if not all nodes are active
+		# so we use node-status
+		if ! efm node-status-json $CLUSTER > /dev/null 2>&1
+		then
+			echo "$prog: cannot contact EFM agent, check service is started${iflg:+, ignored}" >&2
+			[ $iflg ] || exit 1
+			efm=n
+		fi
+	fi
+
+	# Find the Master node
+	eval `efm cluster-status-json $CLUSTER | jq -r '.nodes |
+			to_entries |
+			map_values(.value + { node: .key }) | .[]  |
+			select(.type | test("Master"; "ig")) |
+			{ item: "masterip=\(.node)" } | .[]'`
+
+	if [ "X$masterip" = "X" ]
+	then
+		echo "$prog: cannot determine master node in cluster" >&2; exit 1
+	fi
+
+	if ! ent=`getent hosts $masterip`
+	then
+		echo "$prog: cannot find local host entry for '$masterip'" >&2; exit 1
+	fi
+	set -- $ent
+	eval master=\$$#
+
+	if [ "X$rhostip" != "X$masterip" ]
+	then
+		echo "$prog: remote host $rhost [$rhostip] is not the master node $master [$masterip]"; exit 1
 	fi
 fi
 
-: ${PGDATA:=/pg/data}
+eval `getprop -v db.service.name` 
 
-if [ ! "$fflg" ] && sudo -u enterprisedb [ -d $PGDATA ]
+if status=`systemctl is-active $db_service_name`
 then
-	echo "$prog: directory '$PGDATA' already exists, override with -f" >&2
-	exit 1
+	if [ "X$status" = "Xactive" ]
+	then
+		echo "$prog: service $db_service_name is running"; exit 1
+	fi
 fi
 
-sudo -i -u enterprisedb rm -rf ${PGDATA}
+eval `getprop -v db.service.owner`
+eval `getprop -v db.data.dir`
 
-sudo -i -u enterprisedb /usr/edb/as12/bin/pg_basebackup \
+if [ -z "$db_data_dir" ]
+then
+		echo "$prog: db.data.dir is null"; exit 1
+fi
+
+empty="`sudo -n -i -u $db_service_owner find $db_data_dir -prune -empty`"
+
+if [ ! "$fflg" ] && [ ! "$empty" ]
+then
+	echo "$prog: directory '$db_data_dir' already exists, override with -f" >&2; exit 1
+fi
+
+if [ ! "$empty" ]
+then
+	if [ $iflg ]
+	then
+		if ! sudo -i -n -u $db_service_owner [ -f $db_data_dir/standby.signal ]
+		then
+			echo "$prog: directory '$db_data_dir' is not a standby, cannot remove" >&2; exit 1
+		fi
+	fi
+
+	sudo -n -i -u $db_service_owner sh -c "rm -rf ${db_data_dir}/*"
+fi
+
+eval `getprop -v db.bin`
+
+sudo -n -i -u $db_service_owner $db_bin/pg_basebackup \
 	--host=$rhostip \
 	--wal-method=$method \
 	--progress \
-	--pgdata=${PGDATA:=/pg/data} \
+	--pgdata=${db_data_dir} \
 	--write-recovery-conf \
 	--verbose \
 	--username=efm
@@ -135,15 +198,32 @@ sudo -i -u enterprisedb /usr/edb/as12/bin/pg_basebackup \
 # synchronous_standby_names is also changed in readiness for this standby
 # being promoted
 # pg_basebackup will change host= in postgresql.auto.conf to the name of the primary
-sudo -i -u enterprisedb  \
-ex -s $PGDATA/postgresql.conf <<-!
+eval `getprop -v application.name`
+
+sudo -n -i -u $db_service_owner  \
+ex -s $db_data_dir/postgresql.conf <<-!
 	g/^[ 	]*cluster_name[ 	]*=/ s;=.*;= '$host';
 	g/^[ 	]*synchronous_standby_names[ 	]*=/ s;=.*;= '$rhost';
-	g/^[ 	]*primary_conninfo[ 	]*=/s;\(application_name\)=[^ 	']\{1,\};\1=$host;
+	g/^[ 	]*primary_conninfo[ 	]*=/s;\(application_name\)=[^ 	']\{1,\};\1=${application_name:-$host};
 	g/^[ 	]*primary_conninfo[ 	]*=/s;\(host\)=[^ 	']\{1,\};\1=$rhostip;
 	w!
 !
 
-# Clear postgresql.auto.conf
-
+# Clear postgresql.auto.conf of primary_conninfo which is added by
+# pg_basebackup
+sudo -n -i -u $db_service_owner  \
+ex -s $db_data_dir/postgresql.auto.conf <<-!
+	g/^[ 	]*primary_conninfo[ 	]*=/d
+	w!
+!
 # Set certificate to be the correct one - or change the location!
+
+# Is pg_wal somewhere other than PGDATA?
+target=`sudo -n -i -u $db_service_owner ssh $rhostip "ls -l ${db_data_dir}/pg_wal" | awk '$(NF-1) == "->" { print $(NF) }'`
+if [ -n "$target" ]
+then
+	sudo -n -i -u $db_service_owner sh -c "
+		mv ${db_data_dir}/pg_wal/* $target && \
+		rmdir ${db_data_dir}/pg_wal && \
+		ln -fs $target ${db_data_dir}/pg_wal"
+fi

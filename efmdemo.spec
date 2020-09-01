@@ -1,8 +1,8 @@
 %define _prefix /usr/local
 
 Name:		efmdemo
-Version:	1.1
-Release:	3%{?dist}
+Version:	1.2
+Release:	4%{?dist}
 Summary:	EDB Failover Manager Demo on AWS
 
 Group:		Productivity/Database/Tools
@@ -12,7 +12,10 @@ Vendor:		EDB
 Packager:	Simon Anthony
 Source0:	%{name}-%{version}.tar.gz
 
-BuildRequires: jq, libnotify
+Requires: jq, libnotify, bash
+BuildRequires: bash
+
+BuildArch: noarch
 
 %global debug_package %{nil}
 
@@ -49,6 +52,7 @@ make DESTDIR=%buildroot install
 
 %files
 %{_bindir}/*
+%{_mandir}/*
 
 %changelog
 

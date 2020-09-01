@@ -91,6 +91,7 @@ done
 
 ###
 : ${CLUSTER:=efm}
+export CLUSTER
 
 [ $# -gt 1 ] && errflg=y
 [ $# -eq 1 ] && CLUSTER="$1"

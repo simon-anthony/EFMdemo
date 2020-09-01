@@ -37,7 +37,7 @@ PATH=/usr/bin:BINDIR export PATH
 prog=`basename $0 .sh`
 properties=`ls /etc/edb/efm-*/${CLUSTER:=efm}.properties | sort -t\- -V -k2 -r | head -1`
 
-: ${CLUSTER:=efm}
+export CLUSTER
 
 if [ ! -r "$properties" ] 
 then

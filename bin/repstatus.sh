@@ -46,7 +46,7 @@ sg()
 off=$(sg off) bold=$(sg bold) master=$(sg green) standby=$(sg yellow)
 
 
-sudo -i -u enterprisedb psql -XE -U efm postgres <<-! 
+sudo -n -i -u enterprisedb psql -XE -U efm postgres <<-! 
 
 	select pg_is_in_recovery as var1
 	\gset
