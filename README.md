@@ -3,31 +3,37 @@
 Tools to support EFM Demo.
 
 ## Getting Started
+### Prerequisites
 
-To download the latest binary and review release notes, see the [EFMtools releases](https://github.com/simon-anthony/efmtools/releases) page.
+#### Failover Manager
+* EDB Failover Manager [EFM](https://www.enterprisedb.com/products/postgresql-automatic-failover-manager-cluster-high-availability) is required. Much of the configuration information obtained by the package tools relies on a working properties file being present for the cluster.
+
+#### Linux Packages
+The following packages are required by the tools:
+
+* jq
+* libnotify
+
+They will be automatically installed if the repositories are available.
+Otherwise download these packages and install them beforehand.
+
+## Installing from Packages
+
+To download the latest RPM packages and review release notes, see the [EFMdemo releases](https://github.com/simon-anthony/efmdemo/releases) page.
+
+Install the package with the usual RPM based tools: `rpm`, `yum` or `dnf`.
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 
-### Prerequisites
 
-* EDB Failover Manager is required. The [EFM](https://www.enterprisedb.com/products/postgresql-automatic-failover-manager-cluster-high-availability).
-
-#### Linux Packages
-You will need the following:
-
-* jq
-* lib-notify
-
-packages and install them.
-
-### Installing from a Tar Bundle
+## Installing from a Tar Bundle
 
 Download the latest release.
 
 Unzip the package:
 
 <pre>
-tar xzf crunchbase-<i>m</i>.<i>n</i>.tar.gz
+tar xzf efmdemo-<i>m</i>.<i>n</i>.tar.gz
 </pre>
 
 Run `configure`:
@@ -52,37 +58,23 @@ and then install it:
 ### Configuring
 
 Ensure that the *bindir* path derived from the install *prefix* in the `configure`
-step is available in the `PATH` environment variable. Using the previous example:
+step is available in the `PATH` environment variable. Using the previous example where the default of `/user/local/bin` is not chosen:
 
 <pre>
-PATH=$PATH:/EFMtools/bin
+PATH=$PATH:/opt/EFMtools/bin
 </pre>
 
 ## Usage
 
 Details to follow.
 
-### Developing
+## Developing
 To develop the package clone or download the repository.
 GNU Autotools are required for development.
 
 #### GNU Autotools
 The [GNU Autotools](https://en.wikipedia.org/wiki/GNU_Autotools) are required
 to build and deploy the source packages.
-
-## Authors
-
-* **Simon Anthony** - *Initial work* - * [Simon Anthony](https://github.com/simon-anthony)
-
-See also the list of [contributors](https://github.com/simon-anthony/efmtools/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-## Building RPMS from the Source Tree
 
 ## Building RPMS from the Source Tree
 Set `%_topdir` in the file `$HOME/.rpmmacros`
@@ -107,26 +99,39 @@ done
 
 Bootstrap the **autoconf** tools:
 
-`autoreconf --install`
+* `autoreconf --install`
 
 Then run configure:
 
-`./configure`
+* `./configure`
 
 This will create the necsessary <code>Makefile</code> that is required to build the source tarball.
 Then we can create the tarball:
 
-`make dist-gzip`
+* `make dist-gzip`
 
 We can then move the package into the `SOURCES` directory:
 
-`mv efmdemo-`*vers*`.tar.gz $topdir/SOURCES`
+* `mv efmdemo-`*vers*`.tar.gz $topdir/SOURCES`
 
 And we also need a copy the spec file to the `SPECS` directory:
 
-`cp -f efmdemo.spec $topdir/SPECS`
+* `cp -f efmdemo.spec $topdir/SPECS`
 
 Finally, build the package:
 
-`rpmbuild -bb $topdir/SPECS/efmbuild.spec`
+* `rpmbuild -bb $topdir/SPECS/efmbuild.spec`
+
+
+## Authors
+
+* **Simon Anthony** - *Initial work* - * [Simon Anthony](https://github.com/simon-anthony)
+
+See also the list of [contributors](https://github.com/simon-anthony/efmtools/contributors) who participated in this project.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+## Acknowledgments
 
