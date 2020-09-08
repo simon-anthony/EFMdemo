@@ -16,32 +16,27 @@
 # You should have received a copy of the GNU General Public License along
 # with this program. If not see <http://www.gnu.org/licenses/>>
 #
-# Retrieve properties from ${CLUSTER}.properties
+# Set properties in ${CLUSTER}.properties
 
 PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
-typeset vflg= iflg= errflg=
+typeset errflg=
 typeset -l property
 
-while getopts "vi:" opt 2>&-
+while getopts "v" opt 2>&-
 do
 	case $opt in
-	v)	[ $iflg ] && errflg=y 
-		vflg=y ;;
-	i)	[ $vflg ] && errflg=y
-		property="$OPTARG"
-		iflg=y ;;
+	v)	vflg=y ;;
 	\?)	errflg=y
 	esac
 done
 shift $(( OPTIND - 1 ))
 
-[ -n "$iflg" -a $# -gt 0 ] && errflg=y
+[ $# -eq 0 ] && errflg=y
 
 [ $errflg ] && {
-	echo "usage: $prog [-v] [<property>]" >&2
-	echo "       $prog -i <property>" >&2; exit 2; }
+	echo "usage: $prog <property>=<value> [<property>=<value>...]" >&2; exit 2; }
 
 : ${CLUSTER:=efm}
 export CLUSTER
@@ -49,27 +44,41 @@ export CLUSTER
 properties=`ls /etc/edb/efm-*/${CLUSTER}.properties | sort -t\- -V -k2 -r | head -1`
 if [ ! -r "$properties" ] 
 then
-	echo $prog: "properties file not found for $cluster" >&2
+	echo $prog: "properties file not found for $cluster" >&2; exit 1
+fi
+
+if [ ! -w "$properties" ] 
+then
+	echo $prog: "properties file '$properties' not writable" >&2; exit 1
+fi
+
+tmpfile=`mktemp`
+
+while [ $# -ne 0 ]
+do
+	if [[ "$1" =~ [a-zA-Z\.*]+= ]]
+	then
+		property=${1%=*}
+		if getprop $property >/dev/null 2>&1
+		then
+			value="${1#*=}"
+			echo "g/^$property=/s;=.*;=$value;" >> $tmpfile
+		else
+			echo "$prog: invalid property: '$property'" >&2
+		fi
+	else
+		echo "$prog: bad format: '$1'" >&2
+	fi
+	shift	
+done
+
+if [ ! -s $tmpfile ] # there are no edits to make
+then
+	echo "$prog: no edits to make" >&2
 	exit 1
 fi
 
-if [ $iflg ]
-then
-	sed -n "
-		/#/ { H; }
-		/^[ 	]*$/ { x; d; n; }
-		/^$property=/ { x; p; q; }" $properties
-	exit 0
-fi
+echo "w!" >> $tmpfile
 
-[ $# -eq 0 ] && set -- "[a-z\.0-9]*"
-
-for i
-do
-	if [ $vflg ]
-	then
-		grep -i "^$i=" $properties | awk -F= '{ gsub("\\.", "_", $1); printf("%s=%s\n", $1, $2); }'
-	else
-		grep -i "^$i=" $properties 
-	fi
-done
+# lock file and update
+flock -w 10 $properties ex -s $properties < $tmpfile

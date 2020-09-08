@@ -1,0 +1,31 @@
+.\" vim:ts=4:sw=4:syntax=nroff
+.fp 1 R
+.fp 2 I
+.fp 3 B
+.fp 4 BI
+.fp 5 CO
+.fp 6 CI
+.fp 7 CB
+.nr X
+.TH setprop 1 "09 Nov 2009" "EFM Demo Tools"
+.SH NAME
+setprop \- set property values in EFM cluster file
+.SH SYNOPSIS
+\f3setprop\f1 \f2property\f1=\f2value\f1 [\f2property\f1=\f2value\f1]
+.SH DESCRIPTION
+.IX "setprop"
+.P
+\f3setprop\f1 sets EFM properties in the current EFM properties file.
+The cluster file in use is defined by the environment variable \f4$CLUSTER\f1
+or the default "efm" if this is not present.
+.SH EXAMPLES
+.SS Set the value of the 'promotable' property
+.P
+.nf
+.sp
+\f5$ \f7setprop promotable=false\f5
+.fi
+.SH AUTHOR
+Simon Anthony (simon.anthony@hotmail.com)
+
+

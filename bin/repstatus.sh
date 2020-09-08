@@ -17,7 +17,27 @@
 # with this program. If not see <http://www.gnu.org/licenses/>>
 # 
 
-PATH=/usr/bin:/usr/edb/as12/bin export PATH
+PATH=/usr/bin:BINDIR export PATH
+
+prog=`basename $0 .sh`
+typeset errflg=
+
+: ${CLUSTER:=efm}
+export CLUSTER
+
+while getopts "u:" opt 2>&-
+do
+	case $opt in
+	u)	user="$OPTARG"	# user used for replication
+		uflg=y ;;
+	\?)	errflg=y
+	esac
+done
+shift $(( OPTIND - 1 ))
+
+[ $# -gt 1 ] && errflg=y
+
+[ $errflg ] && { echo "usage: $prog [-u <user>]" >&2; exit 2; }
 
 sg()
 {
@@ -46,7 +66,7 @@ sg()
 off=$(sg off) bold=$(sg bold) master=$(sg green) standby=$(sg yellow)
 
 
-sudo -n -i -u enterprisedb psql -XE -U efm postgres <<-! 
+sudo -n -i -u enterprisedb psql -XE -U ${user:=efm} postgres <<-! 
 
 	select pg_is_in_recovery as var1
 	\gset

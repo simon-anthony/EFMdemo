@@ -22,7 +22,8 @@ bin_SCRIPTS = \
 	getnodes \
 	getbasebackup \
 	repstatus \
-	getprop
+	getprop \
+	setprop
 
 CLEANFILES = $(bin_SCRIPTS)
 
@@ -34,4 +35,5 @@ EXTRA_DIST = \
 	getnodes.sh \
 	getbasebackup.sh \
 	repstatus.sh \
-	getprop.sh
+	getprop.sh \
+	setprop.sh
