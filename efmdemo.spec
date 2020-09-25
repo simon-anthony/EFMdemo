@@ -1,8 +1,8 @@
 %define _prefix /usr/local
 
 Name:		efmdemo
-Version:	1.3
-Release:	8%{?dist}
+Version:	1.4
+Release:	1%{?dist}
 Summary:	EDB Failover Manager Demo on AWS
 
 Group:		Productivity/Database/Tools
@@ -53,6 +53,8 @@ make DESTDIR=%buildroot install
 %files
 %{_bindir}/*
 %{_mandir}/*
+%{_datadir}/*
+
 
 %changelog
 

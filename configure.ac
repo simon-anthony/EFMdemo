@@ -1,4 +1,4 @@
-AC_INIT([efmdemo],[1.3],[bug@enterprisedb.com])
+AC_INIT([efmdemo],[1.4],[bug@enterprisedb.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_PROG_AWK([gawk] nawk awk)
@@ -17,5 +17,7 @@ bin/Makefile
 share/Makefile
 share/man/Makefile
 share/man/man1/Makefile
+share/pki/Makefile
+share/pki/servers/Makefile
 ])
 AC_OUTPUT
