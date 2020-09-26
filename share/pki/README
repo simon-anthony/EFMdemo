@@ -1,2 +1,14 @@
 These keys and certificates have been generated with the AWS Certificate
 Manager. They should be suitable for most purposes.
+
+The installation relies on the naming of the hosts in the EFM example.com 
+cluster being s1, s2, s3 and s4.
+
+For example:
+
+Whatever the name of the host in /etc/hosts add the last entry for the local
+host (in this example "s2") to the line:
+
+10.128.0.22 r1b.c.se-emea-236017.internal r1b s2 # Added by Google
+
+

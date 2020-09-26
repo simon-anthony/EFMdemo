@@ -1,5 +1,7 @@
-echo sudo cp ExampleRoot.cer /etc/pki/ca-trust/source/anchors
-echo sudo update-ca-trust extract
+#!/bin/sh -
+
+sudo cp ExampleRoot.cer /etc/pki/ca-trust/source/anchors
+sudo update-ca-trust extract
 
 hostip=`hostname -i`
 
@@ -22,6 +24,3 @@ sudo chown root:enterprisedb $private/server.key
 
 sudo chmod 444 $certs/server.crt 
 sudo chmod 440 $private/server.key
-
-#sudo -u enterprisedb chmod 444 $certs/server.crt 
-#sudo -u enterprisedb chmod 400 $private/server.key

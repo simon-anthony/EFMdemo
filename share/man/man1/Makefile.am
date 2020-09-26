@@ -1,6 +1,7 @@
 dist_man1_MANS = \
 	getbasebackup.1 \
-	getprop.1
+	getprop.1 \
+	setprop.1
 
 install-data-hook:
 	@echo "g/BASEDIR/s;BASEDIR;$(prefix);g" > $(DESTDIR)/$(man1dir)/exscript ;\
