@@ -23,8 +23,9 @@ Provision is made to use information gleaned from a running EFM cluster.
 .SH OPTIONS
 .TP
 \f3\-i\f1
-Ignore the EFM configuration used for sanity checks. In this instance it is
-assumed that \f2rhost\f1 is indeed a primary database.
+Ignore the querying of the running EFM service used for sanity checks. In this instance it is
+assumed that \f2rhost\f1 is indeed a primary database. A properties file must
+still have been instantiated for this cluster, however.
 .TP
 \f3\-f\f1
 Force the removal of \f4$PGDATA\f1 (defined by the EFM property \f3db.data.dir\f1) if it exists prior to running \f3pg_basebackup\f1.

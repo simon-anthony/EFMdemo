@@ -89,7 +89,22 @@ then
 	echo "$prog: host and remote host cannot be the same node"; exit 1
 fi
 
-eval `getprop -v is.witness`
+# Get all properties at the start so that we can inform the user if any are
+# missing.
+err=
+for property in db.service.name db.service.owner db.data.dir db.bin db.user application.name 
+do
+    eval `getprop -v $property`
+    rval=`eval echo \\$\${property//./_}`
+    if [ "X$rval" = "X" ]
+    then
+        echo "$prog: no value for $property found" >&2
+		err=y
+    fi
+done
+[ $err ] && exit 1
+
+eval `getprop -v is.witness`	# I know I have a properties file at this point
 
 if [ "X$is_witness" = "Xtrue" ]
 then
@@ -144,8 +159,6 @@ then
 	fi
 fi
 
-eval `getprop -v db.service.name` 
-
 if status=`systemctl is-active $db_service_name`
 then
 	if [ "X$status" = "Xactive" ]
@@ -153,9 +166,6 @@ then
 		echo "$prog: service $db_service_name is running"; exit 1
 	fi
 fi
-
-eval `getprop -v db.service.owner`
-eval `getprop -v db.data.dir`
 
 if [ -z "$db_data_dir" ]
 then
@@ -182,8 +192,6 @@ then
 	sudo -n -i -u $db_service_owner sh -c "rm -rf ${db_data_dir}/*"
 fi
 
-eval `getprop -v db.bin`
-
 sudo -n -i -u $db_service_owner $db_bin/pg_basebackup \
 	--host=$rhostip \
 	--wal-method=$method \
@@ -191,14 +199,13 @@ sudo -n -i -u $db_service_owner $db_bin/pg_basebackup \
 	--pgdata=${db_data_dir} \
 	--write-recovery-conf \
 	--verbose \
-	--username=efm
+	--username=${db_user:=efm} || exit $?
 
 # pg_basebackup will change synchronous_standby_names
 # however cluster_name and application_name must be changed
 # synchronous_standby_names is also changed in readiness for this standby
 # being promoted
 # pg_basebackup will change host= in postgresql.auto.conf to the name of the primary
-eval `getprop -v application.name`
 
 sudo -n -i -u $db_service_owner  \
 ex -s $db_data_dir/postgresql.conf <<-!
