@@ -24,19 +24,22 @@ prog=`basename $0 .sh`
 typeset errflg=
 typeset -l property
 
-while getopts "v" opt 2>&-
+while getopts "f:" opt 2>&-
 do
 	case $opt in
-	v)	vflg=y ;;
+	f)	fflg=y 
+		file="$OPTARG";;
 	\?)	errflg=y
 	esac
 done
 shift $(( OPTIND - 1 ))
 
-[ $# -eq 0 ] && errflg=y
+[ -z "$fflg" -a $# -eq 0 ] && errflg=y
+[ -n "$fflg" -a $# -gt 0 ] && errflg=y
 
 [ $errflg ] && {
-	echo "usage: $prog <property>=<value> [<property>=<value>...]" >&2; exit 2; }
+	echo "usage: $prog <property>=<value> [<property>=<value>...]" >&2; 
+	echo "       $prog -f <file>" >&2; exit 2; }
 
 : ${CLUSTER:=efm}
 export CLUSTER
@@ -54,8 +57,24 @@ fi
 
 tmpfile=`mktemp`
 
-while [ $# -ne 0 ]
-do
+writeprop() {
+	local fflg= errflg= tmpfile=
+	local property= value=
+	local prog=writeprop
+	OPTIND=1
+	while getopts "f:" opt 2>&-
+	do
+		case $opt in
+		f)	fflg=y 
+			tmpfile="$OPTARG";;
+		\?)	errflg=y
+		esac
+	done
+	shift $(( OPTIND - 1 ))
+	[ $fflg ] || errflg=y
+	[ $# -eq 1 ] || errflg=y
+	[ $errflg ] && { echo "usage: $prog -f <file> <arg>"; return 2; }
+
 	if [[ "$1" =~ [a-zA-Z\.*]+= ]]
 	then
 		property=${1%=*}
@@ -69,8 +88,21 @@ do
 	else
 		echo "$prog: bad format: '$1'" >&2
 	fi
+}
+
+while [ $# -ne 0 ]
+do
+	writeprop -f $tmpfile "$1"
 	shift	
 done
+
+if [ $fflg ]
+then
+	while read line
+	do
+		writeprop -f $tmpfile "$line"
+	done < $file
+fi
 
 if [ ! -s $tmpfile ] # there are no edits to make
 then

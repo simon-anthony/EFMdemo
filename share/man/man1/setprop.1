@@ -12,12 +12,18 @@
 setprop \- set property values in EFM cluster file
 .SH SYNOPSIS
 \f3setprop\f1 \f2property\f1=\f2value\f1 [\f2property\f1=\f2value\f1]
+.nf
+\f3setprop\f1 \f3-f\f1 \f2file\f1
 .SH DESCRIPTION
 .IX "setprop"
 .P
 \f3setprop\f1 sets EFM properties in the current EFM properties file.
 The cluster file in use is defined by the environment variable \f4$CLUSTER\f1
 or the default "efm" if this is not present.
+.SH OPTIONS
+.TP
+\f3\-f\f1 \f2file\f1
+Read in the property settings from the file \f2file\f1.
 .SH EXAMPLES
 .SS Set the value of the 'promotable' property
 .P
