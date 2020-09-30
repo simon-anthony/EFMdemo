@@ -30,7 +30,7 @@ cp -f $pkg.spec $topdir/SPECS
 rpmbuild -bb $topdir/SPECS/$pkg.spec
 
 # When creating a new tag, don't forget to push it.
-# log --oneline
+# git log --oneline
 # git tag
 # git tag 1.4-1
 # git push --tags
