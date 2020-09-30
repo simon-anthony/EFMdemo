@@ -128,9 +128,13 @@ then
 		# so we use node-status
 		if ! efm node-status-json $CLUSTER > /dev/null 2>&1
 		then
-			echo "$prog: cannot contact EFM agent, check service is started${iflg:+, ignored}" >&2
-			[ $iflg ] || exit 1
-			efm=n
+			agent=`efm node-status-json $CLUSTER | jq -r '.agent'`
+			if [ "X$agent" != "XUP" ]
+			then
+				echo "$prog: EFM agent is not up, check service is started${iflg:+, ignored}" >&2
+				[ $iflg ] || exit 1
+				efm=n
+			fi
 		fi
 	fi
 

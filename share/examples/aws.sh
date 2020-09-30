@@ -54,3 +54,6 @@ aws ec2 associate-address --network-interface-id "$network_interface_id" --alloc
 logger -t $prog  -p ${facility}.info "Status returned by associating-address: $?"
 
 logger -t $prog -p ${facility:=local1}.info "Exited"
+
+# list instances
+aws ec2 describe-instances  --filter Name=tag:Name,Values=* --query 'Reservations[*].Instances[*].{Instance:InstanceId,Name:Tags[?Key==`Name`]|[0].Value}'
