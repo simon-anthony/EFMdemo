@@ -44,7 +44,14 @@ shift $(( OPTIND - 1 ))
 
 [ $errflg ] && { echo "usage: $prog [-n] <primary-address>" >&2; exit 2; }
 
-primary=$1
+# parameter passed as primary must be an IP address
+if [[ "$1" =~ [a-z].* ]]
+then
+	primary=`dig "$1" +short`	
+else
+	primary=$1
+fi
+
 
 eval typeset -l `getprop -v syslog.facility`
 
@@ -53,11 +60,17 @@ logger -t $prog -p ${facility:=local1}.info "Invoked"
 logger -t $prog -p ${facility}.info "New primary is: $primary"
 
 primary=`dig -x $primary +short`	# hostname
+if  [ "X$primary" = "X" ]
+then
+	logger -t $prog -p ${facility}.error "Unable to perform reverse lookup for: $1, exiting"
+	exit 1
+fi
 primary=${primary%%.*}
 
 logger -t $prog -p ${facility}.info "Setting new primary in autofs: $primary"
 if sudo -n ex -s /etc/sysconfig/autofs <<-!
-    g/-DRHOST/s;\(-DRHOST\)=[^"'  ]\{1,\};\1=$primary;
+	g/^[ 	]*OPTIONS=/s;-DRHOST=[^"' 	]\{1,\} *;;
+	g/^[ 	]*OPTIONS=/s;=";="-DRHOST=$primary ;
 	w!
 !
 then
