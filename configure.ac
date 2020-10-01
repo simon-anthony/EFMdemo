@@ -1,4 +1,4 @@
-AC_INIT([efmdemo],[1.7],[bug@enterprisedb.com])
+AC_INIT([efmdemo],[1.8],[bug@enterprisedb.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_PROG_AWK([gawk] nawk awk)

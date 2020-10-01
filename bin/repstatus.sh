@@ -63,7 +63,7 @@ sg()
 	done
 	echo -n "[${_pi}m"
 }
-off=$(sg off) bold=$(sg bold) master=$(sg green) standby=$(sg yellow)
+off=$(sg off) bold=$(sg bold) primary=$(sg green) standby=$(sg yellow)
 
 
 sudo -n -i -u enterprisedb psql -XE -U ${user:=efm} postgres <<-! 
@@ -108,7 +108,7 @@ sudo -n -i -u enterprisedb psql -XE -U ${user:=efm} postgres <<-!
 
 		select setting as cluster_name from pg_settings where name = 'cluster_name'
 		\gset
-		\echo cluster_name = ''''${master}:cluster_name${off}''''
+		\echo cluster_name = ''''${primary}:cluster_name${off}''''
 
 		select setting as synchronous_standby_names from pg_settings where name = 'synchronous_standby_names'
 		\gset

@@ -21,27 +21,31 @@
 PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
-typeset vflg= iflg= errflg=
+typeset vflg= iflg= pflg= errflg=
 typeset -l property
 
-while getopts "vi:" opt 2>&-
+while getopts "vi:p" opt 2>&-
 do
 	case $opt in
-	v)	[ $iflg ] && errflg=y 
+	v)	[ "$iflg" -o "$pflg" ] && errflg=y 	# return in shell variable form
 		vflg=y ;;
-	i)	[ $vflg ] && errflg=y
+	i)	[ "$vflg" -o "$pflg" ] && errflg=y	# print information about property
 		property="$OPTARG"
 		iflg=y ;;
+	p)	[ "$iflg" -o "$vflg" ] && errflg=y 	# print properties file name
+		pflg=y ;;
 	\?)	errflg=y
 	esac
 done
 shift $(( OPTIND - 1 ))
 
 [ -n "$iflg" -a $# -gt 0 ] && errflg=y
+[ -n "$pflg" -a $# -gt 0 ] && errflg=y
 
 [ $errflg ] && {
-	echo "usage: $prog [-v] [<property>]" >&2
-	echo "       $prog -i <property>" >&2; exit 2; }
+	echo "usage: $prog [-v] [<property>]" >&2;
+	echo "       $prog -i <property>" >&2;
+	echo "       $prog -p" >&2; exit 2; }
 
 : ${CLUSTER:=efm}
 export CLUSTER
@@ -51,6 +55,12 @@ if [ ! -r "$properties" ]
 then
 	echo $prog: "properties file not found for $cluster" >&2
 	exit 1
+fi
+
+if [ $pflg ]
+then
+	echo $properties
+	exit 0
 fi
 
 if [ $iflg ]

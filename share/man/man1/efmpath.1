@@ -17,6 +17,8 @@ efmpath \- print EFM bin directory
 .P
 \f3efmpath\f1 returns the bin directory for the EFM product based on the
 systemd(1) configuration.
+The cluster in use is defined by the environment variable \f4$CLUSTER\f1
+or the default "efm" if this is not present. 
 .SH OPTIONS
 .TP
 \f3\-e\f1 
@@ -27,9 +29,9 @@ Insist that the unit file for EFM is in an enabled state.
 \f3efmpath\f1 returns the bin directory for the enabled systemd service for
 EFM.
 .P
-If multiple services are enabled an error is returned.
+If multiple services are enabled for the same cluster $CLUSTER then an error is returned.
 .P
-If no systemd service is enabled for EFM and multiple versions of the product
+If no systemd service is enabled for EFM for this cluster and multiple versions of the product
 are installed then the bin directory for the highest version number
 of the installed services which is found is returned.
 .SH AUTHOR

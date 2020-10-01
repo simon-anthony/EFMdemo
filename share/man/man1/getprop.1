@@ -14,12 +14,16 @@ getprop \- retrieve property values from EFM cluster file
 \f3getprop\f1 [\f3-v\f1] [\f2property\f1]
 .nf
 \f3getprop\f1 [\f3-i\f1] \f2property\f1
+.nf
+\f3getprop\f1 \f3-p\f1
 .SH DESCRIPTION
 .IX "getprop"
 .P
 \f3getprop\f1 retrieves EFM properties from the current EFM properties file.
 The cluster file in use is defined by the environment variable \f4$CLUSTER\f1
-or the default "efm" if this is not present.
+or the default "efm" if this is not present. If a specific property
+\f2property\f1 is not specified then the values for all properties are
+returned.
 .SH OPTIONS
 .TP
 \f3\-v\f1
@@ -29,6 +33,9 @@ The value returned by \f3getprop\f1 can be given to \f3eval\f1.
 .TP
 \f3\-i\f1
 Print information about the property \f3property\f1.
+.TP
+\f3\-p\f1
+Print only the path of the properties file and exit.
 .SH EXAMPLES
 .SS Find the value of PGDATA for this database
 .P

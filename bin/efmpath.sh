@@ -22,6 +22,9 @@ PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
 
+: ${CLUSTER:=efm}
+export CLUSTER
+
 typeset eflg= errflg=
 
 while getopts "e" opt 2>&-
@@ -37,36 +40,44 @@ shift $(( OPTIND - 1 ))
 [ $errflg ] && {
 	echo "usage: $prog [-e]" >&2; exit 2; }
 
-typeset -i enabled=`systemctl --type=service --no-pager --no-legend --state=enabled list-unit-files edb-efm* | wc -l`
-if [ $enabled -eq 1 ]
+# get unit file(s) for this cluster
+typeset service=
+
+
+while read unit state
+do
+	if [ "$state" = "enabled" ]
+	then
+		if [ -n "$enabled" ]
+		then
+			  echo "$prog: ERROR: multiple services are enabled for EFM for cluster '$CLUSTER'" >&2
+            exit 1
+        fi
+        enabled=$unit
+	else
+		disabled="$unit" # this will be the last one i.e. the highest version
+    fi
+done < <(
+		while read -r unit state
+		do
+			cluster=`systemctl show --property=Environment $unit | sed 's;.*CLUSTER=\([^[:space:]]*\);\1;'`
+			[ "$cluster" = $CLUSTER ] && echo $unit $state
+		done < <(systemctl --type=service --no-pager --no-legend list-unit-files edb-efm*))
+
+if [ -n "$eflg" -a -z "$enabled" ]
 then
-	# simple case
-	unit=`systemctl --type=service --no-pager --no-legend --state=enabled list-unit-files edb-efm* | cut -f1 -d\ `
-elif [ $enabled -gt 1 ]
-then
-	echo "$prog: ERROR: multiple services are enabled for EFM:" >&2
-	systemctl --type=service --no-pager --no-legend --state=enabled >&2
+	echo "$prog: no services are enabled for EFM for cluster '$CLUSTER'" >&2
 	exit 1
-elif [ $enabled -eq 0 ]
+fi	
+
+if [ -n "$enabled" ]
 then
-	if [ $eflg ]
-	then
-		echo "$prog: no services are enabled for EFM" >&2
-		exit 1
-	fi
-	# consider installed how many are installed
-	typeset -i installed=`systemctl --type=service --no-pager --no-legend list-unit-files edb-efm* | wc -l`
-	if [ $installed -eq 0 ]
-	then
-		echo "$prog: no services are installed for EFM" >&2
-		exit 1
-	elif [ $installed -eq 1 ]
-	then
-		unit=`systemctl --type=service --no-pager --no-legend --state=disabled list-unit-files edb-efm* | cut -f1 -d\ `
-	else # more than one installed - choose highest version
-		unit=`systemctl --type=service --no-pager --no-legend --state=disabled list-unit-files edb-efm* | tail -1 | cut -f1 -d\ `
-	fi
+	echo $enabled
+elif [ -n "$disabled" ]
+then
+	echo $disabled
+else
+	exit 1
 fi
 
-[ "X$unit" = "X" ] && exit 1
-systemctl --no-pager --no-legend show --property=ExecStart $unit | sed 's;.*\(/usr/edb/[^ ]*/bin\)/.*;\1;'
+exit 0

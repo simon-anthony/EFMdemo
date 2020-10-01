@@ -35,31 +35,21 @@
 PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
-properties=`ls /etc/edb/efm-*/${CLUSTER:=efm}.properties | sort -t\- -V -k2 -r | head -1`
 
+: ${CLUSTER:=efm}
 export CLUSTER
 
-if [ ! -r "$properties" ] 
-then
-	logger -p local1.error -t $prog "properties file not found for $cluster"
-	exit 1
-fi
+PATH=$PATH:`efmpath` || exit $?
 
-if [ -r "$properties" ] 
-then
-	typeset -l facility=`sed -n '/syslog.facility=/ { s/.*=[ 	]*// ; p }' $properties`
-	typeset -l witness=`sed -n '/is.witness=/ { s/.*=[ 	]*// ; p }' $properties`
-fi
+eval typeset -l `getprop -v syslog.facility`
+eval typeset -l `getprop -v is.witness`
 
-bindir=`ls -d /usr/edb/${CLUSTER}-*/bin | sort -t\- -V -k2 -r | head -1`
-PATH=$PATH:$bindir
-
-logger -t $prog -p ${facility:=local1}.info "Invoked"
+logger -t $prog -p ${syslog_facility:=local1}.info "Invoked"
 
 user=`id -un`
-: ${ICON:=/usr/local/share/icons/edb/32x32/efm.png}
+: ${ICON:=DATADIR/icons/edb/32x32/efm.png}
 
-if [ "A$witness" = "Atrue" ]
+if [ "A$is_witness" = "Atrue" ]
 then
 	if [ "X$HOME" = "X" ]
 	then
@@ -67,7 +57,7 @@ then
 	fi
 	if [ "X$HOME" = "X" ]
 	then
-		logger -p local1.error -t $prog "Unable to determine HOME for $user"
+		logger -p ${syslog_facility}.info -t $prog "Unable to determine HOME for $user"
 	elif [ -f "$HOME"/.notify ]
 	then
 		notify=`cat "$HOME"/.notify`
@@ -88,4 +78,4 @@ else
 
 	ssh $user@$witnessip /bin/sh "$0 '$1' '$2'"
 fi
-logger -t $prog -p ${facility:=local1}.info "Exited"
+logger -t $prog -p ${syslog_facility}.info "Exited"

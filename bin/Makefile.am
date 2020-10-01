@@ -23,7 +23,8 @@ bin_SCRIPTS = \
 	getbasebackup \
 	repstatus \
 	getprop \
-	setprop
+	setprop \
+	efmpath
 
 CLEANFILES = $(bin_SCRIPTS)
 
@@ -36,4 +37,5 @@ EXTRA_DIST = \
 	getbasebackup.sh \
 	repstatus.sh \
 	getprop.sh \
-	setprop.sh
+	setprop.sh \
+	efmpath.sh

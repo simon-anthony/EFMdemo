@@ -44,28 +44,20 @@ shift $(( OPTIND - 1 ))
 
 [ $errflg ] && { echo "usage: $prog [-n] <primary-address>" >&2; exit 2; }
 
-master=$1
+primary=$1
 
-properties=`ls /etc/edb/efm-*/$CLUSTER.properties | sort -t\- -V -k2 -r | head -1`
-
-if [ -r "$properties" ] 
-then
-	typeset -l facility=`sed -n '/syslog.facility=/ { s/.*=[ 	]*// ; p }' $properties`
-fi
-
-bindir=`dirname $properties`/bin efmbindir=${bindir/etc/usr}
-PATH=$PATH:$efmbindir
+eval typeset -l `getprop -v syslog.facility`
 
 logger -t $prog -p ${facility:=local1}.info "Invoked"
 
-logger -t $prog -p ${facility}.info "New master is: $master"
+logger -t $prog -p ${facility}.info "New primary is: $primary"
 
-master=`dig -x $master +short`	# hostname
-master=${master%%.*}
+primary=`dig -x $primary +short`	# hostname
+primary=${primary%%.*}
 
-logger -t $prog -p ${facility}.info "Setting new master in autofs: $master"
+logger -t $prog -p ${facility}.info "Setting new primary in autofs: $primary"
 if sudo -n ex -s /etc/sysconfig/autofs <<-!
-    g/-DRHOST/s;\(-DRHOST\)=[^"'  ]\{1,\};\1=$master;
+    g/-DRHOST/s;\(-DRHOST\)=[^"'  ]\{1,\};\1=$primary;
 	w!
 !
 then

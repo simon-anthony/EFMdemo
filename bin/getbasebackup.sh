@@ -49,7 +49,7 @@ shift $(( OPTIND - 1 ))
 
 [ $errflg ] && { echo "usage: $prog [-fi] [-X <method>] <rhost>" >&2; exit 2; }
 
-properties=`ls /etc/edb/efm-*/$CLUSTER.properties | sort -t\- -V -k2 -r | head -1`
+properties=`getprop -p`
 
 if [ "X$properties" = "X" ]
 then
@@ -59,8 +59,7 @@ fi
 version=${properties##*-} version=${version%%/*}
 maj=${version%.*} min=${version#*.}
 
-bindir=`ls -d /usr/edb/efm-*/bin | sort -t\- -V -k2 -r | head -1`
-PATH=$PATH:$bindir
+PATH=$PATH:`efmpath` || exit $?
 
 rhost="$1"
 if ! ent=`getent hosts $rhost`
@@ -143,23 +142,23 @@ then
 			to_entries |
 			map_values(.value + { node: .key }) | .[]  |
 			select(.type | test("Master"; "ig")) |
-			{ item: "masterip=\(.node)" } | .[]'`
+			{ item: "primaryip=\(.node)" } | .[]'`
 
-	if [ "X$masterip" = "X" ]
+	if [ "X$primaryip" = "X" ]
 	then
-		echo "$prog: cannot determine master node in cluster" >&2; exit 1
+		echo "$prog: cannot determine primary node in cluster" >&2; exit 1
 	fi
 
-	if ! ent=`getent hosts $masterip`
+	if ! ent=`getent hosts $primaryip`
 	then
-		echo "$prog: cannot find local host entry for '$masterip'" >&2; exit 1
+		echo "$prog: cannot find local host entry for '$primaryip'" >&2; exit 1
 	fi
 	set -- $ent
-	eval master=\$$#
+	eval primary=\$$#
 
-	if [ "X$rhostip" != "X$masterip" ]
+	if [ "X$rhostip" != "X$primaryip" ]
 	then
-		echo "$prog: remote host $rhost [$rhostip] is not the master node $master [$masterip]"; exit 1
+		echo "$prog: remote host $rhost [$rhostip] is not the primary node $primary [$primaryip]"; exit 1
 	fi
 fi
 

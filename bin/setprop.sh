@@ -44,7 +44,7 @@ shift $(( OPTIND - 1 ))
 : ${CLUSTER:=efm}
 export CLUSTER
 
-properties=`ls /etc/edb/efm-*/${CLUSTER}.properties | sort -t\- -V -k2 -r | head -1`
+properties=`getprop`
 if [ ! -r "$properties" ] 
 then
 	echo $prog: "properties file not found for $cluster" >&2; exit 1
@@ -114,3 +114,5 @@ echo "w!" >> $tmpfile
 
 # lock file and update
 flock -w 10 $properties ex -s $properties < $tmpfile
+
+rm -f $tmpfile

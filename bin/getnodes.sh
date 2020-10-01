@@ -27,7 +27,7 @@ usage() {
 	cat >&2 <<-! 
 usage: $prog [OPTIONS] [<cluster>]
 OPTIONS:
-  -m, --master               Print the master node
+  -p, --primary              Print the primary node
   -s, --standby              List all standby nodes
   -w, --witness              Print the witness node
   -c, --coordinator          The current membership coordinator
@@ -39,45 +39,45 @@ OPTIONS:
 	exit 2
 }
 
-TEMP=`getopt -o mswcfah --long master,standby,witness,coordinator,failoverpriority,allowednodes,membershipcoordinator,help \
+TEMP=`getopt -o mswcfah --long primary,standby,witness,coordinator,failoverpriority,allowednodes,membershipcoordinator,help \
 	 -n "$prog" -- "$@"`
 
 [ $? != 0 ] && { usage; exit 1; }
 
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
-typeset mflg= sflag= wflg= cflg= fflg= aflg= errflg= node=".*"
+typeset pflg= sflag= wflg= cflg= fflg= aflg= errflg= node=".*"
 
 while true
 do
 	case "$1" in
-	-m|--master)
+	-m|-p|--primary)
 		[ "$sflg" -o "$wflg" -o "$cflg" -o "$fflg" -a "$aflg" ] && errflg=y
-		node="master"
-		mflg=y
+		node="primary"
+		pflg=y
 		shift ;;
 	-s|--standby)
-		[ "$mflg" -o "$wflg" -o "$cflg" -o "$fflg" -a "$aflg" ] && errflg=y
+		[ "$pflg" -o "$wflg" -o "$cflg" -o "$fflg" -a "$aflg" ] && errflg=y
 		node="standby"
 		sflg=y
 		shift ;;
 	-w|--witness)
-		[ "$mflg" -o "$sflg" -o "$cflg" -o "$fflg" -a "$aflg" ] && errflg=y
+		[ "$pflg" -o "$sflg" -o "$cflg" -o "$fflg" -a "$aflg" ] && errflg=y
 		node="witness"
 		wflg=y
 		shift ;;
 	-c|--coordinator|--membershipcoordinator)
-		[ "$mflg" -o "$sflg" -o "$wflg" -o "$fflg" -a "$aflg" ] && errflg=y
+		[ "$pflg" -o "$sflg" -o "$wflg" -o "$fflg" -a "$aflg" ] && errflg=y
 		node="membershipcoordinator"
 		cflg=y
 		shift ;;
 	-f|--failoverpriority)
-		[ "$mflg" -o "$sflg" -o "$wflg" -o "$cflg" -a "$aflg" ] && errflg=y
+		[ "$pflg" -o "$sflg" -o "$wflg" -o "$cflg" -a "$aflg" ] && errflg=y
 		node="failoverpriority"
 		fflg=y
 		shift ;;
 	-a|--allowednodes)
-		[ "$mflg" -o "$sflg" -o "$wflg" -o "$cflg" -a "$fflg" ] && errflg=y
+		[ "$pflg" -o "$sflg" -o "$wflg" -o "$cflg" -a "$fflg" ] && errflg=y
 		node="allowednodes"
 		aflg=y
 		shift ;;
@@ -98,8 +98,7 @@ export CLUSTER
 
 [ $errflg ] && usage
 
-bindir=`ls -d /usr/edb/efm-*/bin | sort -t\- -V -k2 -r | head -1`
-PATH=$PATH:$bindir
+PATH=$PATH:`efmpath` || exit $?
 
 # Find the node(s)
 if [ "$cflg" ]
