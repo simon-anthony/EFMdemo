@@ -52,7 +52,6 @@ else
 	primary=$1
 fi
 
-
 eval typeset -l `getprop -v syslog.facility`
 
 logger -t $prog -p ${facility:=local1}.info "Invoked"

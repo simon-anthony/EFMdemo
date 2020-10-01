@@ -12,7 +12,7 @@ Vendor:		EDB
 Packager:	Simon Anthony
 Source0:	%{name}-%{version}.tar.gz
 
-Requires: jq, libnotify, bash
+Requires: jq, libnotify, bash, bind-utils
 BuildRequires: bash
 
 BuildArch: noarch
