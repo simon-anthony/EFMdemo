@@ -19,7 +19,13 @@
 
 # Add user "efm" to the "wheel" group, this should have NOPASSWD
 # or set NOPASSWD individually for the commands /usr/bin/systemctl and
-# /usr/bin/ex
+# /usr/bin/ex and /usr/bin/sed. For example:
+#
+# cat /etc/sudoers.d/efm-local:
+# efm    ALL=(ALL)           NOPASSWD:   /usr/bin/systemctl
+# efm    ALL=(ALL)           NOPASSWD:   /usr/bin/ex
+# efm    ALL=(ALL)           NOPASSWD:   /usr/bin/sed
+# efm    ALL=(ALL)           NOPASSWD:   /usr/bin/umount
 #
 # First argument is new primary node (%p)
 
@@ -53,6 +59,11 @@ else
 fi
 
 eval typeset -l `getprop -v syslog.facility`
+eval `getprop -v db.data.dir`
+
+
+archive=`sudo -n sed -n '/^archive_command/ { s;.*[[:blank:]]/\([^[:blank:]]*\)/.*;/\1;p ; }' $db_data_dir/postgresql.conf`
+restore=`sudo -n sed -n '/^restore_command/ { s;.*[[:blank:]]/\([^[:blank:]]*\)/.*;/\1;p ; }' $db_data_dir/postgresql.conf`
 
 logger -t $prog -p ${facility:=local1}.info "Invoked"
 
@@ -73,8 +84,17 @@ if sudo -n ex -s /etc/sysconfig/autofs <<-!
 	w!
 !
 then
-	sudo -n systemctl reload autofs
-	logger -t $prog -p ${facility}.info "Reloaded autofs"
+	for dir in $archive $restore 
+	do
+		if df -t nfs4 $dir > /dev/null 2>&1
+		then
+			logger -t $prog -p ${facility}.info "Unmounting $dir" 
+			sudo -n umount -f -t nfs4 $dir
+		fi
+	done
+	sudo -n systemctl reload autofs && \
+		logger -t $prog -p ${facility}.info "Reloaded autofs" || \
+		logger -t $prog -p ${facility}.error "Reload autofs failed"
 else
 	logger -t $prog -p ${facility}.error "Failed to edit /etc/sysconfig/autofs"
 fi
