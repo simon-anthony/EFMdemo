@@ -161,7 +161,8 @@ sudo -n -i -u enterprisedb psql -XE -U ${user:=efm} postgres <<-!
 				-- replication. This has no effect in a quorum-based synchronous
 				-- replication.
 			sync_state
-		from pg_stat_replication;
+		from pg_stat_replication
+		order by application_name;
 
 		\echo pg_stat_replication - pertaining to synchronous_commit = '''':synchronous_commit''''
 

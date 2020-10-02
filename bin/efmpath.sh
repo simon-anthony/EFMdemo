@@ -72,10 +72,10 @@ fi
 
 if [ -n "$enabled" ]
 then
-	echo $enabled
+	systemctl --no-pager --no-legend show --property=ExecStart $enabled | sed 's;.*\(/usr/edb/[^ ]*/bin\)/.*;\1;'
 elif [ -n "$disabled" ]
 then
-	echo $disabled
+	systemctl --no-pager --no-legend show --property=ExecStart $disabled | sed 's;.*\(/usr/edb/[^ ]*/bin\)/.*;\1;'
 else
 	exit 1
 fi

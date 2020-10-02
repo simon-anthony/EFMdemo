@@ -61,9 +61,8 @@ fi
 eval typeset -l `getprop -v syslog.facility`
 eval `getprop -v db.data.dir`
 
-
-archive=`sudo -n sed -n '/^archive_command/ { s;.*[[:blank:]]/\([^[:blank:]]*\)/.*;/\1;p ; }' $db_data_dir/postgresql.conf`
-restore=`sudo -n sed -n '/^restore_command/ { s;.*[[:blank:]]/\([^[:blank:]]*\)/.*;/\1;p ; }' $db_data_dir/postgresql.conf`
+#archive=`sudo -n sed -n '/^archive_command/ { s;.*[[:blank:]]/\([^[:blank:]]*\)/.*;/\1;p ; }' $db_data_dir/postgresql.conf`
+#restore=`sudo -n sed -n '/^restore_command/ { s;.*[[:blank:]]/\([^[:blank:]]*\)/.*;/\1;p ; }' $db_data_dir/postgresql.conf`
 
 logger -t $prog -p ${facility:=local1}.info "Invoked"
 
@@ -77,25 +76,37 @@ then
 fi
 primary=${primary%%.*}
 
-logger -t $prog -p ${facility}.info "Setting new primary in autofs: $primary"
-if sudo -n ex -s /etc/sysconfig/autofs <<-!
-	g/^[ 	]*OPTIONS=/s;-DRHOST=[^"' 	]\{1,\} *;;
-	g/^[ 	]*OPTIONS=/s;=";="-DRHOST=$primary ;
-	w!
-!
+# could edit the map directly and then do a reload - assuming we know the name
+# of the map
+# Otherwise as we cannot change global macro without restart of automount process
+# we performa a restart
+if [ $reload ]
 then
-	for dir in $archive $restore 
-	do
-		if df -t nfs4 $dir > /dev/null 2>&1
-		then
-			logger -t $prog -p ${facility}.info "Unmounting $dir" 
-			sudo -n umount -f -t nfs4 $dir
-		fi
-	done
-	sudo -n systemctl reload autofs && \
-		logger -t $prog -p ${facility}.info "Reloaded autofs" || \
-		logger -t $prog -p ${facility}.error "Reload autofs failed"
+	logger -t $prog -p ${facility}.info "Setting new primary in map: $primary"
+	if sudo -n ex -s /etc/auto.shared <<-\!
+		g%^[[:blank:]]*/restore%s;/[^[:blank:]/]\{1,\}[[:blank:]]*\\*$;/$NEWRHOST;
+		w! /tmp/auto.new
+	!
+	then
+		sudo -n systemctl reload autofs && \
+			logger -t $prog -p ${facility}.info "Reload autofs" || \
+			logger -t $prog -p ${facility}.error "Reload autofs failed"
+	else
+		logger -t $prog -p ${facility}.error "Failed to edit /etc/auto.shared"
+	fi
 else
-	logger -t $prog -p ${facility}.error "Failed to edit /etc/sysconfig/autofs"
+	logger -t $prog -p ${facility}.info "Setting new primary as RHOST in autofs: $primary"
+	if sudo -n ex -s /etc/sysconfig/autofs <<-!
+		g/^[ 	]*OPTIONS=/s;-DRHOST=[^"' 	]\{1,\} *;;
+		g/^[ 	]*OPTIONS=/s;=";="-DRHOST=$primary ;
+		w!
+	!
+	then
+		sudo -n systemctl restart autofs && \
+			logger -t $prog -p ${facility}.info "Restart autofs" || \
+			logger -t $prog -p ${facility}.error "Restart autofs failed"
+	else
+		logger -t $prog -p ${facility}.error "Failed to edit /etc/sysconfig/autofs"
+	fi
 fi
 logger -t $prog -p ${facility:=local1}.info "Exited"

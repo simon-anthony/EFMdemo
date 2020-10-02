@@ -19,7 +19,10 @@ getbasebackup \- create standby database on local host
 \f3getbasebackup\f1 uses \f3pg_basebackup\f1 to copy a remote backup from a
 primary database residing on \f2rhost\f1 to create a standby on the local host.
 .P
-Provision is made to use information gleaned from a running EFM cluster. 
+Provision is made to use information gleaned from a running EFM cluster. The
+current cluster from which this information is retrieved is defined by the
+envionment variable \f2$CLUSTER\f1, otherwise the cluster named "efm" is used
+if this is not defined.
 .SH OPTIONS
 .TP
 \f3\-i\f1
