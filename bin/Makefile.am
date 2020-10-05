@@ -24,7 +24,8 @@ bin_SCRIPTS = \
 	repstatus \
 	getprop \
 	setprop \
-	efmpath
+	efmpath \
+	syncstandbys
 
 CLEANFILES = $(bin_SCRIPTS)
 
@@ -38,4 +39,5 @@ EXTRA_DIST = \
 	repstatus.sh \
 	getprop.sh \
 	setprop.sh \
-	efmpath.sh
+	efmpath.sh \
+	syncstandbys.sh
