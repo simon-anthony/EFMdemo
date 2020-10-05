@@ -44,7 +44,7 @@ shift $(( OPTIND - 1 ))
 : ${CLUSTER:=efm}
 export CLUSTER
 
-properties=`getprop`
+properties=`getprop -p`
 if [ ! -r "$properties" ] 
 then
 	echo $prog: "properties file not found for $cluster" >&2; exit 1
