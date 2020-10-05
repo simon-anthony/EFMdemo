@@ -43,7 +43,7 @@ do
 done
 shift $(( OPTIND - 1 ))
 
-[ $# -eq 0 ] && {
+[ -z "$sflg" -a $# -eq 0 ] && {
 	echo -n "synchronous_standby_names = "
 	sudo -i -u enterprisedb psql -A -t postgres -c "show synchronous_standby_names"
 	exit 0
@@ -68,21 +68,38 @@ set -- $ent
 eval host=\$$#
 prefix=${host%%[0-9]*}
 
-standby_names=
-i=1
+declare -a standby_names=
 
-string="'${method:=FIRST} $((n - 1)) ("
+i=1 
 while [[ $i -le $n ]]
 do
 	if [[ $prefix$i != $host ]] 
 	then
-		[[ $i -gt 1 ]] && string="$string, "
-		string="$string$prefix$i"
+		standby_names[$i]=$prefix$i
+	else
+		standby_names[$i]=
 	fi
 	(( i = i + 1 ))
 done
 
-string="$string)'"
+start=${host##*[^0-9]}
+string=
 
-sudo -i -u enterprisedb psql postgres -c "ALTER SYSTEM SET synchronous_standby_names = $string"
+i=$start
+while [[ $i -le $n ]]
+do
+	[[ -n "$string" ]] && sep=", "
+	string="$string$sep${standby_names[$i]}"
+	(( i = i + 1 ))
+done
+
+j=1
+while [[ $j -lt $start ]]
+do
+	[[ -n "$string" ]] && sep=", "
+	string="$string$sep${standby_names[$j]}"
+	(( j = j + 1 ))
+done
+
+sudo -i -u enterprisedb psql postgres -c "ALTER SYSTEM SET synchronous_standby_names = '${method:=FIRST} ($string)'"
 sudo systemctl reload edb-as-12
