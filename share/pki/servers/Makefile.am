@@ -16,4 +16,5 @@ dist_servers_DATA = \
 	s4.key \
 	s4.prv \
 	w1.crt \
+	w1.key \
 	w1.prv

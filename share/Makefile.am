@@ -1,1 +1,1 @@
-SUBDIRS = man pki
+SUBDIRS = man pki efm

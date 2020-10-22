@@ -1,7 +1,7 @@
 %define _prefix /usr/local
 
 Name:		efmdemo
-Version:	1.12
+Version:	2.1
 Release:	1%{?dist}
 Summary:	EDB Failover Manager Demo on AWS
 
@@ -50,9 +50,24 @@ make DESTDIR=%buildroot install
 [ %buildroot != "/" ] && rm -rf %buildroot
 
 
+%post
+[ -x /usr/local/bin/aws ] && cloud=aws
+[ -x /usr/bin/gcloud ] && cloud=gcp
+
+if [ $cloud ]
+then
+	ln -fs %{_datadir}/efm/$cloud/script/efm-notify %{_bindir}
+	ln -fs %{_datadir}/efm/$cloud/script/efm-post-promotion %{_bindir}
+	ln -fs %{_datadir}/efm/$cloud/script/efm-remote-post-promotion %{_bindir}
+fi
+
+%preun
+rm -f %{_bindir}/efm-notify
+rm -f %{_bindir}/efm-post-promotion
+rm -f %{_bindir}/efm-remote-post-promotion
+
 %files
 %{_bindir}/*
-%{_mandir}/*
 %{_datadir}/*
 
 

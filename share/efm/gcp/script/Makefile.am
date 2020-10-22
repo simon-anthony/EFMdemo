@@ -1,3 +1,5 @@
+datalibdir = $(datadir)/efm/gcp/script
+
 SUFFIXES = .sh 
 
 .sh:
@@ -14,24 +16,14 @@ SUFFIXES = .sh
 	@rm -f exscript
 	@chmod +x $@
 
-bin_SCRIPTS = \
-	az \
-	getnodes \
-	getbasebackup \
-	repstatus \
-	getprop \
-	setprop \
-	efmpath \
-	syncstandbys
+datalib_SCRIPTS = \
+	efm-notify \
+	efm-post-promotion \
+	efm-remote-post-promotion 
 
-CLEANFILES = $(bin_SCRIPTS)
+CLEANFILES = $(datalib_SCRIPTS)
 
 EXTRA_DIST = \
-	az.sh \
-	getnodes.sh \
-	getbasebackup.sh \
-	repstatus.sh \
-	getprop.sh \
-	setprop.sh \
-	efmpath.sh \
-	syncstandbys.sh
+	efm-notify.sh \
+	efm-post-promotion.sh \
+	efm-remote-post-promotion.sh 

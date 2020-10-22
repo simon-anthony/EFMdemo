@@ -17,12 +17,10 @@
 # with this program. If not see <http://www.gnu.org/licenses/>>
 #
 
-# The user invoking this script must be the "efm" user i.e. the owner of the
-# cluster.
-
 # The user invoking this script (typically "efm") must have been authenticated
-# to aws. You can configure credentials by running "aws configure" as this
-# user.
+# to gcp. You can configure credentials by running "gcloud auth login
+# --no-launch-browser" and then "gcloud init" as this user.
+
 # First argument is failed primary (%f), second argument is new primary (%p)
 
 PATH=/usr/bin:BINDIR export PATH
@@ -48,22 +46,17 @@ eval typeset -l `getprop -v syslog.facility`
 
 logger -t $prog -p ${syslog_facility:=local1}.info "Invoked"
 
-# Check default access key
-if ! access_key=`aws configure get aws_access_key_id`
-then
-	logger -t $prog -p ${syslog_facility}.error "User `id -un` is not configured for AWS [$access_key], exiting"
-	exit 1
-fi
+# There must be ~efm/.pgpass set up for this purpose
+shost=`dig -x $2 +short` shost=${shost%%.*}
 
-network_interface_id=`aws ec2 describe-instances --filter Name=private-dns-name,Values=\`hostname\` --query "Reservations[*].Instances[*].NetworkInterfaces[*].NetworkInterfaceId" --out text`
-logger -t $prog -p ${syslog_facility}.info "NetworkInterfaceId $network_interface_id"
+psql -Xwq -h pemserver -p 5432 -U postgres -d pem <<-!
+	UPDATE pem.server 
+	SET description = server
+	WHERE efm_cluster_name = '$CLUSTER';
 
-allocation_id=`aws ec2 describe-addresses --filter Name=tag:EFM,Values=vip --query "Addresses[*].AllocationId" --out text`
-logger -t $prog -p ${syslog_facility}.info "AllocationId $allocation_id"
-
-logger -t $prog -p ${syslog_facility}.info "Associating interface $network_interface_id with allocation $allocation_id"
-aws ec2 associate-address --network-interface-id "$network_interface_id" --allocation-id "$allocation_id" --allow-reassociation
-
-logger -t $prog  -p ${syslog_facility}.info "Status returned by associating-address: $?"
-
+	UPDATE pem.server 
+	SET description = server ||' - primary'
+	WHERE efm_cluster_name = '$CLUSTER'
+	AND (server = '$shost' OR server = '$2') ;
+!
 logger -t $prog -p ${syslog_facility}.info "Exited"

@@ -21,19 +21,23 @@
 PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
-typeset vflg= iflg= pflg= errflg=
+typeset vflg= iflg= pflg= rflg= errflg=
 typeset -l property
+typeset regex=".*"
 
-while getopts "vi:p" opt 2>&-
+while getopts "vi:pr:" opt 2>&-
 do
 	case $opt in
-	v)	[ "$iflg" -o "$pflg" ] && errflg=y 	# return in shell variable form
-		vflg=y ;;
-	i)	[ "$vflg" -o "$pflg" ] && errflg=y	# print information about property
+	v)	[ "$iflg" -o "$pflg" -o "$rflg" ] && errflg=y
+		vflg=y ;;					# return in shell variable form
+	i)	[ "$vflg" -o "$pflg" -o "$rflg" ] && errflg=y
 		property="$OPTARG"
-		iflg=y ;;
-	p)	[ "$iflg" -o "$vflg" ] && errflg=y 	# print properties file name
-		pflg=y ;;
+		iflg=y ;;					# print information about property
+	p)	[ "$iflg" -o "$vflg" -o "$rflg" ] && errflg=y
+		pflg=y ;;					# print properties file name
+	r)	[ "$pflg" -o "$iflg" ] && errflg=y
+		regex="$OPTARG"
+		rflg=y ;;					# search matching regex
 	\?)	errflg=y
 	esac
 done
@@ -41,9 +45,11 @@ shift $(( OPTIND - 1 ))
 
 [ -n "$iflg" -a $# -gt 0 ] && errflg=y
 [ -n "$pflg" -a $# -gt 0 ] && errflg=y
+[ -n "$rflg" -a $# -gt 0 ] && errflg=y
 
 [ $errflg ] && {
 	echo "usage: $prog [-v] [<property>]" >&2;
+	echo "       $prog [-v] -r <regex>" >&2;
 	echo "       $prog -i <property>" >&2;
 	echo "       $prog -p" >&2; exit 2; }
 
@@ -76,6 +82,20 @@ fi
 
 for i
 do
+	if [ $rflg ]
+	then
+		sed -n  "/^$i=/ { s;=.*;;p ; }" $properties | grep "${regex}" |
+		while read j
+		do
+			if [ $vflg ]
+			then
+				grep -i "^$j=" $properties | awk -F= '{ gsub("\\.", "_", $1); printf("%s=%s\n", $1, $2); }'
+			else
+				grep "^$j=" $properties
+			fi
+		done
+		exit
+	fi
 	if [ $vflg ]
 	then
 		grep -i "^$i=" $properties | awk -F= '{ gsub("\\.", "_", $1); printf("%s=%s\n", $1, $2); }'
