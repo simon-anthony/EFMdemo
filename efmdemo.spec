@@ -20,7 +20,7 @@ BuildArch: noarch
 %global debug_package %{nil}
 
 %description
-Supporting scripts and tools for EFM Demo on AWS
+Supporting scripts and tools for EFM Demo on AWS and GCP
 
 
 %prep
