@@ -32,16 +32,18 @@ do
     s)  num_standbys=$OPTARG	# number of standby nodes
 		sflg=y
 		;;
-    n)  num_sync=$OPTARG		# num_sync
+	n)  num_sync=$OPTARG		# num_sync
 		nflg=y		
 		;;
 	a)	method="ANY"			# change method from FIRST to ANY
 		aflg=y
 		;;
-    \?) errflg=y
-    esac
+	\?) errflg=y
+	esac
 done
 shift $(( OPTIND - 1 ))
+
+[ $errflg ] && { echo "usage: $prog [-s <num_standbys> [-n <num_sync>]]" >&2; exit 2; }
 
 [ -z "$sflg" -a $# -eq 0 ] && {
 	echo -n "synchronous_standby_names = "
@@ -55,7 +57,7 @@ shift $(( OPTIND - 1 ))
 [ $sflg ] || errflg=y
 [ $nflg ] || num_sync=$num_standbys	# default all standbys are sync
 
-[ $errflg ] && { echo "usage: $prog [ -s <num_standbys> [-n <num_sync>]]" >&2; exit 2; }
+[ $errflg ] && { echo "usage: $prog [-s <num_standbys> [-n <num_sync>]]" >&2; exit 2; }
 
 (( n = num_standbys + 1 ))
 hostip=`hostname -i`
@@ -101,5 +103,5 @@ do
 	(( j = j + 1 ))
 done
 
-sudo -i -u enterprisedb psql postgres -c "ALTER SYSTEM SET synchronous_standby_names = '${method:=FIRST} ($string)'"
+sudo -i -u enterprisedb psql postgres -c "ALTER SYSTEM SET synchronous_standby_names = '${method:=FIRST} $num_sync ($string)'"
 sudo systemctl reload edb-as-12
