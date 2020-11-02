@@ -17,10 +17,12 @@
 # with this program. If not see <http://www.gnu.org/licenses/>>
 #
 
-# The user invoking this script (typically "efm") must have been authenticated
-# to gcp. You can configure credentials by running "gcloud auth login
-# --no-launch-browser" and then "gcloud init" as this user.
+# The user invoking this script must be the "efm" user i.e. the owner of the
+# cluster.
 
+# The user invoking this script (typically "efm") must have been authenticated
+# to aws. You can configure credentials by running "aws configure" as this
+# user.
 # First argument is failed primary (%f), second argument is new primary (%p)
 
 PATH=/usr/bin:BINDIR export PATH
@@ -47,18 +49,43 @@ shift $(( OPTIND - 1 ))
 eval typeset -l `getprop -v syslog.facility`
 
 logger -t $prog -p ${syslog_facility:=local1}.info "Invoked"
+eval `getprop -v virtual.ip`
+klist
 
-# There must be ~efm/.pgpass set up for this purpose
-shost=`dig -x $2 +short` shost=${shost%%.*}
+logger -t $prog -p ${syslog_facility}.info "virtual.ip is $virtual_ip"
 
-psql -Xwq -h pemserver -p 5432 -U postgres -d pem <<-!
+if [ "X$virtual_ip" != "X" ]
+then
+	logger -t $prog -p ${syslog_facility}.info "setting CNAME to $virtual_ip"
+	if nsupdate -g <<-!
+		server windows.example.com
+		update delete vip.example.com A
+		update add vip.example.com 86400 A $virtual_ip
+		send
+	!
+	then
+		logger -t $prog -p ${syslog_facility}.info "CNAME successfully changed"
+	else
+		logger -t $prog -p ${syslog_facility}.error "CNAME change failed"
+	fi
+fi
+
+# There must be ~efm/.pgpass set up for this purpose (or GSSAPI or other
+# method obviating need for password entry)
+host=`dig -x $2 +short` host=${host%.} shost=${host%%.*}
+eval `grep ^pem_host= /usr/edb/pem/agent/etc/agent.cfg`
+eval `grep ^pem_port= /usr/edb/pem/agent/etc/agent.cfg`
+
+logger -t $prog -p ${syslog_facility}.info "Setting primary to $host [$2] in PEM"
+psql -Xwq -h $pem_host -p $pem_port -U postgres -d pem <<-!
 	UPDATE pem.server 
-	SET description = server
+	SET description = substring(description from '^[^ ]*')
 	WHERE efm_cluster_name = '$CLUSTER';
 
 	UPDATE pem.server 
-	SET description = server ||' - primary'
+	SET description = description ||' - primary'
 	WHERE efm_cluster_name = '$CLUSTER'
-	AND (server = '$shost' OR server = '$2') ;
+	AND (server = '$shost' OR server = '$host' OR server = '$2');
 !
+
 logger -t $prog -p ${syslog_facility}.info "Exited"

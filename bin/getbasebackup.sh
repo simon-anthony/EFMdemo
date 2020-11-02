@@ -137,11 +137,11 @@ then
 		fi
 	fi
 
-	# Find the Master node
+	# Find the Primary node
 	eval `efm cluster-status-json $CLUSTER | jq -r '.nodes |
 			to_entries |
 			map_values(.value + { node: .key }) | .[]  |
-			select(.type | test("Master"; "ig")) |
+			select(.type | test("Master|Primary"; "ig")) |
 			{ item: "primaryip=\(.node)" } | .[]'`
 
 	if [ "X$primaryip" = "X" ]

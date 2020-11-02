@@ -21,23 +21,29 @@
 PATH=/usr/bin:BINDIR export PATH
 
 prog=`basename $0 .sh`
-typeset vflg= iflg= pflg= rflg= errflg=
+typeset vflg= iflg= pflg= rflg= fflg= errflg=
 typeset -l property
 typeset regex=".*"
 
-while getopts "vi:pr:" opt 2>&-
+while getopts "vi:pr:f:" opt 2>&-
 do
 	case $opt in
 	v)	[ "$iflg" -o "$pflg" -o "$rflg" ] && errflg=y
 		vflg=y ;;					# return in shell variable form
 	i)	[ "$vflg" -o "$pflg" -o "$rflg" ] && errflg=y
 		property="$OPTARG"
+		[ $fflg ] && errflg=y
 		iflg=y ;;					# print information about property
 	p)	[ "$iflg" -o "$vflg" -o "$rflg" ] && errflg=y
+		[ $fflg ] && errflg=y
 		pflg=y ;;					# print properties file name
 	r)	[ "$pflg" -o "$iflg" ] && errflg=y
 		regex="$OPTARG"
 		rflg=y ;;					# search matching regex
+	f)	[ "$pflg" -o "$iflg" ] && errflg=y
+		properties="$OPTARG"
+		fflg=y
+		;;
 	\?)	errflg=y
 	esac
 done
@@ -48,15 +54,18 @@ shift $(( OPTIND - 1 ))
 [ -n "$rflg" -a $# -gt 0 ] && errflg=y
 
 [ $errflg ] && {
-	echo "usage: $prog [-v] [<property>]" >&2;
-	echo "       $prog [-v] -r <regex>" >&2;
+	echo "usage: $prog [-v] [-f <file>] [<property>]" >&2;
+	echo "       $prog [-v] [-f <file>] -r <regex>" >&2;
 	echo "       $prog -i <property>" >&2;
 	echo "       $prog -p" >&2; exit 2; }
 
 : ${CLUSTER:=efm}
 export CLUSTER
 
-properties=`ls /etc/edb/efm-*/${CLUSTER}.properties | sort -t\- -V -k2 -r | head -1`
+if [ ! "$fflg" ]
+then
+	properties=`ls /etc/edb/efm-*/${CLUSTER}.properties | sort -t\- -V -k2 -r | head -1`
+fi
 if [ ! -r "$properties" ] 
 then
 	echo $prog: "properties file not found for $cluster" >&2

@@ -1,9 +1,9 @@
 %define _prefix /usr/local
 
 Name:		efmdemo
-Version:	2.1
+Version:	2.4
 Release:	1%{?dist}
-Summary:	EDB Failover Manager Demo on AWS
+Summary:	EDB Failover Manager Demo on AWS, GCP and local
 
 Group:		Productivity/Database/Tools
 License:	GPL
@@ -20,7 +20,7 @@ BuildArch: noarch
 %global debug_package %{nil}
 
 %description
-Supporting scripts and tools for EFM Demo on AWS and GCP
+Supporting scripts and tools for EFM Demo on AWS, GCP and local
 
 
 %prep
@@ -51,20 +51,27 @@ make DESTDIR=%buildroot install
 
 
 %post
+echo ">>> Running post <<<"
+cloud=local
 [ -x /usr/local/bin/aws ] && cloud=aws
 [ -x /usr/bin/gcloud ] && cloud=gcp
 
-if [ $cloud ]
-then
-	ln -fs %{_datadir}/efm/$cloud/script/efm-notify %{_bindir}
-	ln -fs %{_datadir}/efm/$cloud/script/efm-post-promotion %{_bindir}
-	ln -fs %{_datadir}/efm/$cloud/script/efm-remote-post-promotion %{_bindir}
-fi
+ln -fs %{_datadir}/efm/$cloud/script/efm-notify %{_bindir}
+ln -fs %{_datadir}/efm/$cloud/script/efm-post-promotion %{_bindir}
+ln -fs %{_datadir}/efm/$cloud/script/efm-remote-post-promotion %{_bindir}
+
 
 %preun
-rm -f %{_bindir}/efm-notify
-rm -f %{_bindir}/efm-post-promotion
-rm -f %{_bindir}/efm-remote-post-promotion
+echo ">>> Running preun <<<"
+cloud=local
+[ -x /usr/local/bin/aws ] && cloud=aws
+[ -x /usr/bin/gcloud ] && cloud=gcp
+
+[ -r %{_datadir}/efm/$cloud/script/efm-notify ] || rm -f %{_bindir}/efm-notify
+[ -r %{_datadir}/efm/$cloud/script/efm-post-promotion ] || rm -f %{_bindir}/efm-post-promotion
+[ -r %{_datadir}/efm/$cloud/script/efm-remote-post-promotion ] || rm -f %{_bindir}/efm-remote-post-promotion
+:
+
 
 %files
 %{_bindir}/*

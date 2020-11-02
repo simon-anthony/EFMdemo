@@ -1,4 +1,4 @@
-AC_INIT([efmdemo],[2.1],[bug@enterprisedb.com])
+AC_INIT([efmdemo],[2.4],[bug@enterprisedb.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_PROG_AWK([gawk] nawk awk)
@@ -24,5 +24,7 @@ share/efm/aws/Makefile
 share/efm/aws/script/Makefile
 share/efm/gcp/Makefile
 share/efm/gcp/script/Makefile
+share/efm/local/Makefile
+share/efm/local/script/Makefile
 ])
 AC_OUTPUT

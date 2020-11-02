@@ -11,9 +11,9 @@
 .SH NAME
 getprop \- retrieve property values from EFM cluster file
 .SH SYNOPSIS
-\f3getprop\f1 [\f3-v\f1] [\f2property\f1]
+\f3getprop\f1 [\f3-v\f1] [\f2file\f1] [\f2property\f1]
 .nf
-\f3getprop\f1 [\f3-v\f1] \f3-r\f1 \f2regex\f1
+\f3getprop\f1 [\f3-v\f1] [\f2file\f1] \f3-r\f1 \f2regex\f1
 .nf
 \f3getprop\f1 [\f3-i\f1] \f2property\f1
 .nf
@@ -32,6 +32,10 @@ returned.
 Print the property in a form that can be used to assign tp a shell variable.
 The property name has any periods "." in its name replaced by underscores "_".
 The value returned by \f3getprop\f1 can be given to \f3eval\f1.
+.TP
+\f3\-f \f2file\f1
+Use \f2file\f1 as the source for properties rather than the properties file
+determined from the \f4$CLUSTER\f1 environment variable.
 .TP
 \f3\-r \f2regex\f1
 Print all properties that match the regular expression \f2regex\f1.
