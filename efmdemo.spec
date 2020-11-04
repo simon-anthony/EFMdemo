@@ -1,7 +1,7 @@
 %define _prefix /usr/local
 
 Name:		efmdemo
-Version:	2.4
+Version:	2.8
 Release:	1%{?dist}
 Summary:	EDB Failover Manager Demo on AWS, GCP and local
 

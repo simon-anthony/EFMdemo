@@ -192,6 +192,14 @@ then
 		fi
 	fi
 
+	# Is pg_wal somewhere other than PGDATA?
+	target=`sudo -n -i -u $db_service_owner sh -c "ls -l ${db_data_dir}/pg_wal" | awk '$(NF-1) == "->" { print $(NF) }'`
+	if [ -n "$target" ]
+	then
+		echo "$prog: removing $target/*"
+		sudo -n -i -u $db_service_owner sh -c "rm -rf ${target}/*"
+	fi
+	echo "$prog: removing $db_data_dir/*"
 	sudo -n -i -u $db_service_owner sh -c "rm -rf ${db_data_dir}/*"
 fi
 

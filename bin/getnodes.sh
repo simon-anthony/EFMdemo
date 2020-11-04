@@ -25,8 +25,8 @@ prog=`basename $0 .sh`
 
 usage() {
 	cat >&2 <<-! 
-usage: $prog [OPTIONS] [<cluster>]
-OPTIONS:
+usage: $prog [OPTION] [<cluster>]
+OPTION:
   -p, --primary              Print the primary node
   -s, --standby              List all standby nodes
   -w, --witness              Print the witness node
@@ -39,7 +39,7 @@ OPTIONS:
 	exit 2
 }
 
-TEMP=`getopt -o mswcfah --long primary,standby,witness,coordinator,failoverpriority,allowednodes,membershipcoordinator,help \
+TEMP=`getopt -o mpswcfah --long primary,standby,witness,coordinator,failoverpriority,allowednodes,membershipcoordinator,help \
 	 -n "$prog" -- "$@"`
 
 [ $? != 0 ] && { usage; exit 1; }
@@ -52,32 +52,32 @@ while true
 do
 	case "$1" in
 	-m|-p|--primary)
-		[ "$sflg" -o "$wflg" -o "$cflg" -o "$fflg" -a "$aflg" ] && errflg=y
+		[ "$sflg" -o "$wflg" -o "$cflg" -o "$fflg" -o "$aflg" ] && errflg=y
 		node="primary"
 		pflg=y
 		shift ;;
 	-s|--standby)
-		[ "$pflg" -o "$wflg" -o "$cflg" -o "$fflg" -a "$aflg" ] && errflg=y
+		[ "$pflg" -o "$wflg" -o "$cflg" -o "$fflg" -o "$aflg" ] && errflg=y
 		node="standby"
 		sflg=y
 		shift ;;
 	-w|--witness)
-		[ "$pflg" -o "$sflg" -o "$cflg" -o "$fflg" -a "$aflg" ] && errflg=y
+		[ "$pflg" -o "$sflg" -o "$cflg" -o "$fflg" -o "$aflg" ] && errflg=y
 		node="witness"
 		wflg=y
 		shift ;;
 	-c|--coordinator|--membershipcoordinator)
-		[ "$pflg" -o "$sflg" -o "$wflg" -o "$fflg" -a "$aflg" ] && errflg=y
+		[ "$pflg" -o "$sflg" -o "$wflg" -o "$fflg" -o "$aflg" ] && errflg=y
 		node="membershipcoordinator"
 		cflg=y
 		shift ;;
 	-f|--failoverpriority)
-		[ "$pflg" -o "$sflg" -o "$wflg" -o "$cflg" -a "$aflg" ] && errflg=y
+		[ "$pflg" -o "$sflg" -o "$wflg" -o "$cflg" -o "$aflg" ] && errflg=y
 		node="failoverpriority"
 		fflg=y
 		shift ;;
 	-a|--allowednodes)
-		[ "$pflg" -o "$sflg" -o "$wflg" -o "$cflg" -a "$fflg" ] && errflg=y
+		[ "$pflg" -o "$sflg" -o "$wflg" -o "$cflg" -o "$fflg" ] && errflg=y
 		node="allowednodes"
 		aflg=y
 		shift ;;

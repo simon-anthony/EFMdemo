@@ -1,0 +1,41 @@
+.\" vim:ts=4:sw=4:syntax=nroff
+.fp 1 R
+.fp 2 I
+.fp 3 B
+.fp 4 BI
+.fp 5 CO
+.fp 6 CI
+.fp 7 CB
+.nr X
+.TH getnodes 1 "09 Nov 2009" "EFM Demo Tools"
+.SH NAME
+getnodes \- list EFM nodes
+.SH SYNOPSIS
+\f3getnodes\f1 [\f3OPTION\f1] [\f2cluster\f1] 
+.SH DESCRIPTION
+.IX "getprop"
+.P
+\f3getnodes\f1 retrieves nodes inforamation from an EFM cluster.
+The cluster is defined by the argument \f2cluster\f1, or the environment
+variable \f4$CLUSTER\f1 if this is not defined,
+or the default "efm" if this is not present. 
+.TP
+\f3-p\f1, \f3--primary\f1
+Print the primary node
+.TP
+\f3-s\f1, \f3--standby\f1
+List all standby nodes
+.TP
+\f3-w\f1, \f3--witness\f1
+Print the witness node
+.TP
+\f3-c\f1, \f3--coordinator\f1, \f3--membershipcoordinator\f1
+The current membership coordinator
+.TP
+\f3-f\f1, \f3--failoverpriority\f1 
+Ordered priority list
+.TP
+\f3-a\f1, \f3--allowednodes\f1
+List of nodes allowed to join
+.SH AUTHOR
+Simon Anthony (simon.anthony@hotmail.com)

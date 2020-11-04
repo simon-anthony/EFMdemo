@@ -20,9 +20,25 @@
 # The user invoking this script must be the "efm" user i.e. the owner of the
 # cluster.
 
-# The user invoking this script (typically "efm") must have been authenticated
-# to aws. You can configure credentials by running "aws configure" as this
-# user.
+# Using GSS-TSIG to update DNS record for VIP
+# * Using a client keytab
+#   Required is a client keytab created on Windows:
+#     ktpass -princ host/efm.example.com@EXAMPLE.COM 
+#       -ptype KRB5_NT_PRINCIPAL -crypto AES256-SHA1 
+#       -mapop set -pass * -mapuser efm@example.com -out efm.keytab
+#   This is then installed:
+#     mkdir -p /var/kerberos/krb5/user/efm
+#     cp -f efm.keytab /var/kerberos/krb5/user/efm/client.keytab
+#     chown efm:efm /var/kerberos/krb5/user/efm/client.keytab
+#     chmod 600 /var/kerberos/krb5/user/efm/client.keytab
+# kinit -ki
+#
+# * Using PKINIT
+#   Copy the certificate (efm.crt) and key (efm.key) to /etc/pki/tls/certs
+#   and /etc/pki/tls/private, respectively
+# X509_PROXY=FILE:/etc/pki/tls/certs/efm.crt,/etc/pki/tls/private/efm.key
+# kinit -X X509_user_identity=ENV:X509_PROXY
+
 # First argument is failed primary (%f), second argument is new primary (%p)
 
 PATH=/usr/bin:BINDIR export PATH
@@ -50,37 +66,70 @@ eval typeset -l `getprop -v syslog.facility`
 
 logger -t $prog -p ${syslog_facility:=local1}.info "Invoked"
 eval `getprop -v virtual.ip`
-klist
+
+if [ $# -ne 2 ]
+then
+	logger -t $prog -p ${syslog_facility:=local1}.info "New primary address not passed as parameter"
+	logger -t $prog -p ${syslog_facility:=local1}.info "Exited"
+	exit 0
+fi
+
+host=`dig -x $2 +short` host=${host%.} shost=${host%%.*} domain=${host#*.}
+ns=`dig ns $domain +short` ns=${ns%.}
+
+if kinit -ki
+then
+	logger -t $prog -p ${syslog_facility:=local1}.info "kinit with client keytab succeeded"
+else
+	user=`id -un`
+	X509_PROXY=FILE:/etc/pki/tls/certs/$user.crt,/etc/pki/tls/private/$user.key
+	if kinit -X X509_user_identity=ENV:X509_PROXY
+	then
+		logger -t $prog -p ${syslog_facility:=local1}.info "kinit with X509 certificate succeeded"
+	else
+		logger -t $prog -p ${syslog_facility:=local1}.info "kinit failed"
+	fi
+fi
 
 logger -t $prog -p ${syslog_facility}.info "virtual.ip is $virtual_ip"
 
 if [ "X$virtual_ip" != "X" ]
 then
-	logger -t $prog -p ${syslog_facility}.info "setting CNAME to $virtual_ip"
+	# Update the Address record - could do CNAME but with Address can change
+	# PTR record also
 	if nsupdate -g <<-!
-		server windows.example.com
-		update delete vip.example.com A
-		update add vip.example.com 86400 A $virtual_ip
+		server $ns
+		update delete vip.$domain A
+		update add vip.$domain 86400 A $virtual_ip
 		send
 	!
 	then
-		logger -t $prog -p ${syslog_facility}.info "CNAME successfully changed"
+		logger -t $prog -p ${syslog_facility}.info "DNS A record successfully changed to $virtual_ip"
 	else
-		logger -t $prog -p ${syslog_facility}.error "CNAME change failed"
+		logger -t $prog -p ${syslog_facility}.error "DNS A change failed"
 	fi
 fi
 
 # There must be ~efm/.pgpass set up for this purpose (or GSSAPI or other
 # method obviating need for password entry)
-host=`dig -x $2 +short` host=${host%.} shost=${host%%.*}
 eval `grep ^pem_host= /usr/edb/pem/agent/etc/agent.cfg`
 eval `grep ^pem_port= /usr/edb/pem/agent/etc/agent.cfg`
+
+# Get addresses and names of standby nodes to restrict SQL update (in case
+# there are multiple clusters with the same name
+a=(`getnodes -s`)
+addresses=`echo ${a[@]@Q} | sed 's/ /, /g'`	# format for SQL
+
+b=(`for i in ${a[@]}; do dig -x $i +short; done`)
+b=(${b[@]/%./}) 	# remove trailing '.'
+names=`echo ${b[@]@Q} | sed 's/ /, /g'` # format for SQL
 
 logger -t $prog -p ${syslog_facility}.info "Setting primary to $host [$2] in PEM"
 psql -Xwq -h $pem_host -p $pem_port -U postgres -d pem <<-!
 	UPDATE pem.server 
 	SET description = substring(description from '^[^ ]*')
-	WHERE efm_cluster_name = '$CLUSTER';
+	WHERE efm_cluster_name = '$CLUSTER'
+	AND (server IN ($addresses) OR server IN ($names));
 
 	UPDATE pem.server 
 	SET description = description ||' - primary'
